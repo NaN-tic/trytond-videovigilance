@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<tree>
+    <field name="started_at" widget="date" string="Data d'inici"/>
+    <field name="started_at" widget="time" string="Hora d'inici"/>
+    <field name="ended_at" widget="time" string="Hora final"/>
+    <field name="camera"/>
+    <field name="type"/>
+    <field name="directions"/>
+    <field name="max_persons"/>
+    <field name="max_confidence"/>
+</tree>

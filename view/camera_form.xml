@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<form>
+    <label name="name"/>
+    <field name="name"/>
+    <label name="code"/>
+    <field name="code"/>
+    <label name="location"/>
+    <field name="location"/>
+    <label name="active"/>
+    <field name="active"/>
+    <button name="open_alarms" string="Avisos" colspan="2"/>
+    <label name="manufacturer"/>
+    <field name="manufacturer"/>
+    <label name="device_model"/>
+    <field name="device_model"/>
+    <notebook colspan="4">
+        <page string="Connexió" id="connection">
+            <label name="host"/>
+            <field name="host"/>
+            <label name="rtsp_port"/>
+            <field name="rtsp_port"/>
+            <label name="stream_path"/>
+            <field name="stream_path"/>
+            <label name="secondary_stream_path"/>
+            <field name="secondary_stream_path"/>
+            <label name="username"/>
+            <field name="username"/>
+            <label name="password"/>
+            <field name="password" widget="password"/>
+            <label name="onvif_enabled"/>
+            <field name="onvif_enabled"/>
+            <label name="onvif_port"/>
+            <field name="onvif_port"/>
+            <label name="ptz"/>
+            <field name="ptz"/>
+            <label name="rotation"/>
+            <field name="rotation"/>
+            <label name="detect_persons"/>
+            <field name="detect_persons"/>
+            <label name="detect_motion"/>
+            <field name="detect_motion"/>
+        </page>
+        <page string="Estat" id="status">
+            <label name="status"/>
+            <field name="status"/>
+            <label name="status_changed_at"/>
+            <field name="status_changed_at"/>
+            <label name="status_checked_at"/>
+            <field name="status_checked_at"/>
+            <label name="status_detail"/>
+            <field name="status_detail"/>
+            <label name="ptz_moved_at"/>
+            <field name="ptz_moved_at"/>
+            <label name="firmware_version"/>
+            <field name="firmware_version"/>
+            <label name="serial_number"/>
+            <field name="serial_number"/>
+            <label name="hardware_id"/>
+            <field name="hardware_id"/>
+            <label name="frame_at"/>
+            <field name="frame_at"/>
+            <newline/>
+            <field name="frame" widget="image" colspan="4" height="360" width="640"/>
+        </page>
+        <page string="Observacions" id="notes">
+            <field name="notes" colspan="4"/>
+        </page>
+    </notebook>
+</form>

@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<tryton>
+    <data>
+        <record model="ir.message" id="msg_camera_code_unique">
+            <field name="text">El codi de la càmera ha de ser únic.</field>
+        </record>
+        <record model="ir.message" id="msg_web_not_configured">
+            <field name="text">No hi ha cap aplicació web de videovigilància configurada: no es pot obrir la pàgina d'avisos.</field>
+        </record>
+        <record model="ir.message" id="msg_camera_detection_required">
+            <field name="text">La càmera ha de tenir activada la detecció de persones, la de moviment o totes dues.</field>
+        </record>
+        <record model="ir.message" id="msg_manager_number_invalid">
+            <field name="text">El telèfon «%(number)s» de %(party)s no es pot marcar: ha de tenir només xifres (el + es converteix en 00).</field>
+        </record>
+        <record model="ir.message" id="msg_prompt_upload_failed">
+            <field name="text">No s'ha pogut pujar l'àudio a la centraleta Yeastar «%(pbx)s»: %(errmsg)s</field>
+        </record>
+        <record model="ir.message" id="msg_play_prompt_failed">
+            <field name="text">La centraleta Yeastar «%(pbx)s» no ha pogut reproduir l'àudio: %(errmsg)s</field>
+        </record>
+        <record model="ir.message" id="msg_event_uid_unique">
+            <field name="text">L'identificador de l'esdeveniment ha de ser únic.</field>
+        </record>
+        <record model="ir.message" id="msg_event_period_invalid">
+            <field name="text">El final de l'esdeveniment no pot ser anterior a l'inici.</field>
+        </record>
+        <record model="ir.message" id="msg_secret_key_missing">
+            <field name="text">Falta la clau de xifratge: definiu secret_key a la secció [videovigilance] de trytond.conf.</field>
+        </record>
+        <record model="ir.message" id="msg_secret_key_invalid">
+            <field name="text">La clau de xifratge secret_key de trytond.conf no és vàlida (cal una clau Fernet).</field>
+        </record>
+        <record model="ir.message" id="msg_secret_key_mismatch">
+            <field name="text">No es pot desxifrar la contrasenya: la clau secret_key no és la que es va usar per desar-la.</field>
+        </record>
+        <record model="ir.message" id="msg_credentials_forbidden">
+            <field name="text">L'usuari no pertany al grup «Videovigilància: servei» i no pot consultar credencials de càmera.</field>
+        </record>
+        <record model="ir.message" id="msg_heartbeat_forbidden">
+            <field name="text">L'usuari no pertany al grup «Videovigilància: servei» i no pot enviar el batec del servei.</field>
+        </record>
+        <record model="ir.message" id="msg_relay_forbidden">
+            <field name="text">L'usuari no pertany al grup «Videovigilància: servei» i no pot obtenir el testimoni del relé de vídeo.</field>
+        </record>
+    </data>
+</tryton>

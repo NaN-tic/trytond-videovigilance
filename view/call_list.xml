@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<tree>
+    <field name="raised_at" widget="date" string="Data"/>
+    <field name="raised_at" widget="time" string="Hora"/>
+    <field name="party"/>
+    <field name="number"/>
+    <field name="state"/>
+    <field name="voice"/>
+    <field name="error"/>
+</tree>

@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<form>
+    <label name="party"/>
+    <field name="party"/>
+    <label name="phone"/>
+    <field name="phone"/>
+</form>

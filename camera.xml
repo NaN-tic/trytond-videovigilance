@@ -1,0 +1,167 @@
+<?xml version="1.0"?>
+<tryton>
+    <data>
+        <record model="res.group" id="group_admin">
+            <field name="name">Videovigilància: administració</field>
+        </record>
+        <record model="res.group" id="group_reader">
+            <field name="name">Videovigilància: consulta</field>
+        </record>
+        <record model="res.group" id="group_service">
+            <field name="name">Videovigilància: servei (credencials de càmera)</field>
+        </record>
+        <record model="res.user-res.group" id="user_admin_group_admin">
+            <field name="user" ref="res.user_admin"/>
+            <field name="group" ref="group_admin"/>
+        </record>
+        <menuitem name="Videovigilància" id="menu_videovigilance" sequence="100" icon="tryton-folder"/>
+        <record model="ir.ui.menu-res.group" id="menu_main_group_admin">
+            <field name="menu" ref="menu_videovigilance"/>
+            <field name="group" ref="group_admin"/>
+        </record>
+        <record model="ir.ui.menu-res.group" id="menu_main_group_reader">
+            <field name="menu" ref="menu_videovigilance"/>
+            <field name="group" ref="group_reader"/>
+        </record>
+        <record model="ir.ui.view" id="camera_view_form">
+            <field name="model">videovigilance.camera</field>
+            <field name="type">form</field>
+            <field name="name">camera_form</field>
+        </record>
+        <record model="ir.ui.view" id="camera_view_list">
+            <field name="model">videovigilance.camera</field>
+            <field name="type">tree</field>
+            <field name="name">camera_list</field>
+        </record>
+        <record model="ir.action.act_window" id="act_camera">
+            <field name="name">Càmeres</field>
+            <field name="res_model">videovigilance.camera</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_camera_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="camera_view_list"/>
+            <field name="act_window" ref="act_camera"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_camera_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="camera_view_form"/>
+            <field name="act_window" ref="act_camera"/>
+        </record>
+        <menuitem action="act_camera" parent="menu_videovigilance" id="menu_camera" sequence="10"/>
+        <record model="ir.ui.menu-res.group" id="menu_camera_group_admin">
+            <field name="menu" ref="menu_camera"/>
+            <field name="group" ref="group_admin"/>
+        </record>
+        <record model="ir.ui.menu-res.group" id="menu_camera_group_reader">
+            <field name="menu" ref="menu_camera"/>
+            <field name="group" ref="group_reader"/>
+        </record>
+        <record model="ir.model.access" id="access_camera_default">
+            <field name="model">videovigilance.camera</field>
+            <field name="perm_read" eval="False"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_camera_reader">
+            <field name="model">videovigilance.camera</field>
+            <field name="group" ref="group_reader"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_camera_admin">
+            <field name="model">videovigilance.camera</field>
+            <field name="group" ref="group_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+        <record model="ir.action.url" id="act_camera_alarms_url">
+            <field name="name">Avisos de la càmera</field>
+            <!-- Replaced by the camera's own address in OpenAlarms.do_open -->
+            <field name="url">about:blank</field>
+        </record>
+        <record model="ir.action.wizard" id="wizard_camera_open_alarms">
+            <field name="name">Avisos de la càmera</field>
+            <field name="wiz_name">videovigilance.camera.open_alarms</field>
+        </record>
+        <record model="ir.model.button" id="camera_open_alarms_button">
+            <field name="model">videovigilance.camera</field>
+            <field name="name">open_alarms</field>
+            <field name="string">Avisos</field>
+        </record>
+        <record model="ir.model.button-res.group" id="camera_open_alarms_button_group_admin">
+            <field name="button" ref="camera_open_alarms_button"/>
+            <field name="group" ref="group_admin"/>
+        </record>
+        <record model="ir.model.button-res.group" id="camera_open_alarms_button_group_reader">
+            <field name="button" ref="camera_open_alarms_button"/>
+            <field name="group" ref="group_reader"/>
+        </record>
+        <record model="ir.model.field.access" id="access_camera_password_encrypted">
+            <field name="model">videovigilance.camera</field>
+            <field name="field">password_encrypted</field>
+            <field name="perm_read" eval="False"/>
+            <field name="perm_write" eval="False"/>
+        </record>
+        <record model="ir.ui.view" id="location_view_form">
+            <field name="model">videovigilance.location</field>
+            <field name="type">form</field>
+            <field name="name">location_form</field>
+        </record>
+        <record model="ir.ui.view" id="location_view_list">
+            <field name="model">videovigilance.location</field>
+            <field name="type">tree</field>
+            <field name="name">location_list</field>
+        </record>
+        <record model="ir.action.act_window" id="act_location">
+            <field name="name">Ubicacions</field>
+            <field name="res_model">videovigilance.location</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_location_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="location_view_list"/>
+            <field name="act_window" ref="act_location"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_location_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="location_view_form"/>
+            <field name="act_window" ref="act_location"/>
+        </record>
+        <menuitem action="act_location" parent="menu_videovigilance" id="menu_location" sequence="20"/>
+        <record model="ir.ui.menu-res.group" id="menu_location_group_admin">
+            <field name="menu" ref="menu_location"/>
+            <field name="group" ref="group_admin"/>
+        </record>
+        <record model="ir.ui.menu-res.group" id="menu_location_group_reader">
+            <field name="menu" ref="menu_location"/>
+            <field name="group" ref="group_reader"/>
+        </record>
+        <record model="ir.model.access" id="access_location_default">
+            <field name="model">videovigilance.location</field>
+            <field name="perm_read" eval="False"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_location_reader">
+            <field name="model">videovigilance.location</field>
+            <field name="group" ref="group_reader"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_location_admin">
+            <field name="model">videovigilance.location</field>
+            <field name="group" ref="group_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+    </data>
+</tryton>

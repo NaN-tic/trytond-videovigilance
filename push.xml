@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<tryton>
+    <data>
+        <record model="res.user" id="user_web">
+            <field name="name">Web d'avisos (sistema)</field>
+            <field name="login">avisos</field>
+        </record>
+    </data>
+</tryton>

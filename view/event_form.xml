@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<form>
+    <label name="camera"/>
+    <field name="camera"/>
+    <label name="type"/>
+    <field name="type"/>
+    <label name="started_at"/>
+    <field name="started_at"/>
+    <label name="ended_at"/>
+    <field name="ended_at"/>
+    <label name="max_persons"/>
+    <field name="max_persons"/>
+    <label name="max_confidence"/>
+    <field name="max_confidence"/>
+    <label name="user"/>
+    <field name="user"/>
+    <label name="directions"/>
+    <field name="directions"/>
+    <label name="uid"/>
+    <field name="uid"/>
+    <newline/>
+    <field name="snapshot" widget="image" colspan="4" height="360" width="640"/>
+    <field name="start_frame" widget="image" colspan="2" height="270" width="480"/>
+    <field name="end_frame" widget="image" colspan="2" height="270" width="480"/>
+</form>

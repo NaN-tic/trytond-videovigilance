@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<tryton>
+    <data>
+        <record model="ir.ui.view" id="location_manager_view_list">
+            <field name="model">videovigilance.location.manager</field>
+            <field name="type">tree</field>
+            <field name="name">location_manager_list</field>
+        </record>
+        <record model="ir.ui.view" id="location_manager_view_form">
+            <field name="model">videovigilance.location.manager</field>
+            <field name="type">form</field>
+            <field name="name">location_manager_form</field>
+        </record>
+        <record model="ir.ui.view" id="call_view_list">
+            <field name="model">videovigilance.alarm.call</field>
+            <field name="type">tree</field>
+            <field name="name">call_list</field>
+        </record>
+        <record model="ir.ui.view" id="call_view_form">
+            <field name="model">videovigilance.alarm.call</field>
+            <field name="type">form</field>
+            <field name="name">call_form</field>
+        </record>
+
+        <record model="ir.model.access" id="access_location_manager_default">
+            <field name="model">videovigilance.location.manager</field>
+            <field name="perm_read" eval="False"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_location_manager_reader">
+            <field name="model">videovigilance.location.manager</field>
+            <field name="group" ref="group_reader"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_location_manager_admin">
+            <field name="model">videovigilance.location.manager</field>
+            <field name="group" ref="group_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+
+        <record model="ir.model.access" id="access_call_default">
+            <field name="model">videovigilance.alarm.call</field>
+            <field name="perm_read" eval="False"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_call_reader">
+            <field name="model">videovigilance.alarm.call</field>
+            <field name="group" ref="group_reader"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_call_admin">
+            <field name="model">videovigilance.alarm.call</field>
+            <field name="group" ref="group_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+    </data>
+</tryton>

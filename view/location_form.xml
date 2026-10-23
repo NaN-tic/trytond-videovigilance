@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<form>
+    <label name="name"/>
+    <field name="name"/>
+    <label name="active"/>
+    <field name="active"/>
+    <label name="address"/>
+    <field name="address" colspan="3"/>
+    <separator name="managers" colspan="4"/>
+    <field name="managers" colspan="4"/>
+    <separator name="cameras" colspan="4"/>
+    <field name="cameras" colspan="4"/>
+    <separator name="notes" colspan="4"/>
+    <field name="notes" colspan="4"/>
+</form>

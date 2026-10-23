@@ -1,0 +1,96 @@
+<?xml version="1.0"?>
+<tryton>
+    <data>
+        <record model="ir.ui.view" id="event_view_form">
+            <field name="model">videovigilance.event</field>
+            <field name="type">form</field>
+            <field name="name">event_form</field>
+        </record>
+        <record model="ir.ui.view" id="event_view_list">
+            <field name="model">videovigilance.event</field>
+            <field name="type">tree</field>
+            <field name="name">event_list</field>
+        </record>
+        <record model="ir.action.act_window" id="act_event">
+            <field name="name">Esdeveniments</field>
+            <field name="res_model">videovigilance.event</field>
+        </record>
+        <record model="ir.action.act_window.view" id="act_event_view1">
+            <field name="sequence" eval="10"/>
+            <field name="view" ref="event_view_list"/>
+            <field name="act_window" ref="act_event"/>
+        </record>
+        <record model="ir.action.act_window.view" id="act_event_view2">
+            <field name="sequence" eval="20"/>
+            <field name="view" ref="event_view_form"/>
+            <field name="act_window" ref="act_event"/>
+        </record>
+        <record model="ir.action.act_window.domain" id="act_event_domain_all">
+            <field name="name">Tots</field>
+            <field name="sequence" eval="10"/>
+            <field name="domain" eval="[]" pyson="1"/>
+            <field name="act_window" ref="act_event"/>
+        </record>
+        <record model="ir.action.act_window.domain" id="act_event_domain_person">
+            <field name="name">Moviment de persones</field>
+            <field name="sequence" eval="20"/>
+            <field name="domain" eval="[('type', '=', 'person_motion')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_event"/>
+        </record>
+        <record model="ir.action.act_window.domain" id="act_event_domain_presence">
+            <field name="name">Detecció de persones</field>
+            <field name="sequence" eval="25"/>
+            <field name="domain" eval="[('type', '=', 'person_detection')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_event"/>
+        </record>
+        <record model="ir.action.act_window.domain" id="act_event_domain_movement">
+            <field name="name">Moviments de càmera</field>
+            <field name="sequence" eval="30"/>
+            <field name="domain" eval="[('type', '=', 'camera_movement')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_event"/>
+        </record>
+        <menuitem action="act_event" parent="menu_videovigilance" id="menu_event" sequence="30"/>
+        <record model="ir.ui.menu-res.group" id="menu_event_group_admin">
+            <field name="menu" ref="menu_event"/>
+            <field name="group" ref="group_admin"/>
+        </record>
+        <record model="ir.ui.menu-res.group" id="menu_event_group_reader">
+            <field name="menu" ref="menu_event"/>
+            <field name="group" ref="group_reader"/>
+        </record>
+        <record model="ir.model.access" id="access_event_default">
+            <field name="model">videovigilance.event</field>
+            <field name="perm_read" eval="False"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_event_reader">
+            <field name="model">videovigilance.event</field>
+            <field name="group" ref="group_reader"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_event_service">
+            <field name="model">videovigilance.event</field>
+            <field name="group" ref="group_service"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="True"/>
+            <field name="perm_delete" eval="False"/>
+        </record>
+        <record model="ir.model.access" id="access_event_admin">
+            <field name="model">videovigilance.event</field>
+            <field name="group" ref="group_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+            <field name="perm_create" eval="False"/>
+            <field name="perm_delete" eval="True"/>
+        </record>
+    </data>
+</tryton>

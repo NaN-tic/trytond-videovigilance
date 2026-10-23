@@ -1,0 +1,5 @@
+# Packaging files and the tests are not part of the `service` package inside the image.
+Dockerfile
+.dockerignore
+tests
+**/__pycache__

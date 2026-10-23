@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<form>
+    <label name="type"/>
+    <field name="type"/>
+    <label name="state"/>
+    <field name="state"/>
+    <label name="raised_at"/>
+    <field name="raised_at"/>
+    <label name="camera"/>
+    <field name="camera"/>
+    <label name="title"/>
+    <field name="title"/>
+    <label name="event"/>
+    <field name="event"/>
+    <label name="seen_at"/>
+    <field name="seen_at"/>
+    <label name="seen_by"/>
+    <field name="seen_by"/>
+    <label name="body"/>
+    <field name="body" colspan="3"/>
+    <field name="snapshot" widget="image" colspan="4" height="360" width="640"/>
+    <separator name="calls" colspan="4"/>
+    <field name="calls" colspan="4"/>
+    <button name="mark_seen" string="Marcar com a vista" colspan="4"/>
+</form>

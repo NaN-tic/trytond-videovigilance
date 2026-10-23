@@ -1,0 +1,368 @@
+# This file is part videovigilance module for Tryton.
+# The COPYRIGHT file at the top level of this repository contains
+# the full copyright notices and license terms.
+from datetime import datetime
+
+from sql import Literal
+from trytond.exceptions import UserError
+from trytond.i18n import gettext
+from trytond.model import Check, DeactivableMixin, ModelSQL, ModelView, Unique, fields
+from trytond.model.exceptions import AccessError
+from trytond.pool import Pool
+from trytond.pyson import Bool, Eval
+from trytond.rpc import RPC
+from trytond.transaction import Transaction, without_check_access
+from trytond.wizard import StateAction, Wizard
+
+from . import secret
+
+PASSWORD_PLACEHOLDER = 'x' * 10
+STATUSES = [
+    ('unknown', "Desconegut"),
+    ('online', "En línia"),
+    ('offline', "Sense connexió"),
+    ]
+
+# A move command stops by itself after this long unless it is renewed, so a lost
+# connection can never leave the camera running.
+PTZ_HOLD_S = 2.0
+
+# Largest heartbeat frame accepted (bytes). The service sends a small JPEG.
+MAX_HEARTBEAT_FRAME = 1024 * 1024
+DEVICE_TEXT_MAX = 100
+# Camera field, what the camera calls it over ONVIF, and whether it only fills a blank.
+DEVICE_FIELDS = (
+    ('manufacturer', 'manufacturer', True), ('device_model', 'model', True),
+    ('firmware_version', 'firmware', False), ('serial_number', 'serial', False),
+    ('hardware_id', 'hardware', False))
+
+
+def require_service(message):
+    "Only the detection service user (the «service» group) can call this method."
+    pool = Pool()
+    User = pool.get('res.user')
+    ModelData = pool.get('ir.model.data')
+    group = ModelData.get_id('videovigilance', 'group_service')
+    if group not in User.get_groups():
+        raise AccessError(gettext(message))
+
+
+
+class Location(DeactivableMixin, ModelSQL, ModelView):
+    "Ubicació de videovigilància"
+    __name__ = 'videovigilance.location'
+
+    name = fields.Char("Nom", required=True)
+    address = fields.Text("Adreça")
+    notes = fields.Text("Observacions")
+    cameras = fields.One2Many(
+        'videovigilance.camera', 'location', "Càmeres")
+    managers = fields.One2Many(
+        'videovigilance.location.manager', 'location', "Encarregats",
+        help="Persones a qui es truca quan salta una alarma de persona en una "
+        "càmera d'aquesta ubicació. Es truca a tots alhora.")
+
+    @classmethod
+    def __setup__(cls):
+        super().__setup__()
+        cls._order = [('name', 'ASC'), ('id', 'ASC')]
+
+
+class Camera(DeactivableMixin, ModelSQL, ModelView):
+    "Càmera de videovigilància"
+    __name__ = 'videovigilance.camera'
+
+    name = fields.Char("Nom", required=True)
+    code = fields.Char(
+        "Codi", required=True,
+        help="Identificador únic i estable de la càmera.")
+    location = fields.Many2One(
+        'videovigilance.location', "Ubicació", required=True, ondelete='RESTRICT',
+        help="On és la càmera. Els encarregats de la ubicació són a qui es truca "
+        "quan salta una alarma de persona.")
+    manufacturer = fields.Char("Fabricant")
+    device_model = fields.Char("Model")
+    firmware_version = fields.Char(
+        "Versió del programari", readonly=True,
+        help="La informa la càmera per ONVIF, a través del servei de detecció.")
+    serial_number = fields.Char("Número de sèrie", readonly=True)
+    hardware_id = fields.Char("Versió del maquinari", readonly=True)
+    host = fields.Char(
+        "Host", required=True,
+        help="Adreça IP o nom DNS, sense protocol, port ni credencials.")
+    rtsp_port = fields.Integer(
+        "Port RTSP", required=True,
+        domain=[('rtsp_port', '>=', 1), ('rtsp_port', '<=', 65535)])
+    stream_path = fields.Char(
+        "Flux principal", required=True,
+        help="Ruta RTSP relativa, per exemple stream1. Sense credencials.")
+    secondary_stream_path = fields.Char(
+        "Flux secundari",
+        help="Ruta RTSP relativa opcional, per exemple stream2.")
+    username = fields.Char("Usuari de la càmera")
+    password = fields.Function(
+        fields.Char(
+            "Contrasenya", strip=False,
+            help="Contrasenya de la càmera. Es desa xifrada i no es pot "
+            "tornar a consultar; deixeu-la com està per conservar-la."),
+        'get_password', setter='set_password')
+    password_encrypted = fields.Char(
+        "Contrasenya xifrada", readonly=True, strip=False)
+    onvif_enabled = fields.Boolean("ONVIF habilitat")
+    onvif_port = fields.Integer(
+        "Port ONVIF",
+        states={
+            'required': Bool(Eval('onvif_enabled')),
+            'invisible': ~Bool(Eval('onvif_enabled')),
+            },
+        domain=['OR', ('onvif_port', '=', None),
+            [('onvif_port', '>=', 1), ('onvif_port', '<=', 65535)]])
+    ptz = fields.Boolean("Compatible amb PTZ")
+    detect_persons = fields.Boolean(
+        "Detecció de persones",
+        help="Genera un esdeveniment quan hi ha una persona a la imatge, "
+        "es mogui o no.")
+    detect_motion = fields.Boolean(
+        "Detecció de moviment",
+        help="Genera un esdeveniment quan una persona es mou a la imatge. "
+        "Una persona quieta no en genera.")
+    rotation = fields.Selection(
+        [('0', "0°"), ('90', "90°"), ('180', "180°"), ('270', "270°")],
+        "Rotació de la imatge", required=True,
+        help="Rotació que cal aplicar a la imatge perquè les persones "
+        "surtin dretes (p. ex. 180° si la càmera està muntada al revés).")
+    notes = fields.Text("Observacions")
+    status = fields.Selection(
+        STATUSES, "Estat", required=True, readonly=True,
+        help="Estat de la càmera segons el servei de detecció (batec de "
+        "càmeres). Es manté fins al següent batec.")
+    status_changed_at = fields.DateTime("Estat des de", readonly=True)
+    status_checked_at = fields.DateTime("Darrera comprovació", readonly=True)
+    status_detail = fields.Char("Detall de l'estat", readonly=True)
+    frame = fields.Binary(
+        "Darrer fotograma", readonly=True,
+        help="Darrera imatge que el servei de detecció ha enviat amb el batec. "
+        "Es conserva encara que la càmera caigui. Es desa a la taula i no al "
+        "magatzem de fitxers: es canvia a cada batec.")
+    frame_at = fields.DateTime("Hora del fotograma", readonly=True)
+    ptz_moved_at = fields.DateTime(
+        "Darrer moviment", readonly=True,
+        help="Quan es va ordenar l'últim moviment de la càmera des de la web. "
+        "Durant uns segons no s'envien avisos d'esdeveniments d'aquesta càmera, "
+        "perquè en moure's tota l'escena es desplaça i sembla moviment.")
+
+    @classmethod
+    def __setup__(cls):
+        super().__setup__()
+        table = cls.__table__()
+        cls._sql_constraints += [
+            ('code_unique', Unique(table, table.code),
+                'videovigilance.msg_camera_code_unique'),
+            ('detection_required', Check(
+                    table, (table.detect_persons == Literal(True))
+                    | (table.detect_motion == Literal(True))),
+                'videovigilance.msg_camera_detection_required'),
+            ]
+        cls._order = [('name', 'ASC'), ('id', 'ASC')]
+        cls.__rpc__['get_credentials'] = RPC()
+        cls._buttons.update(
+            open_alarms={'invisible': Eval('id', -1) < 0, 'depends': ['id']})
+
+    @classmethod
+    @ModelView.button_action('videovigilance.wizard_camera_open_alarms')
+    def open_alarms(cls, cameras):
+        pass
+
+    @classmethod
+    def __register__(cls, module):
+        super().__register__(module)
+        table_h = cls.__table_handler__(module)
+        table_h.drop_column('password_secret')
+
+    @classmethod
+    def get_password(cls, cameras, name):
+        with without_check_access():
+            return {
+                c.id: PASSWORD_PLACEHOLDER if c.password_encrypted else None
+                for c in cls.browse(cameras)}
+
+    @classmethod
+    def set_password(cls, cameras, name, value):
+        if value == PASSWORD_PLACEHOLDER:
+            return
+        token = secret.encrypt(value) if value else None
+        with without_check_access():
+            cls.write(cameras, {'password_encrypted': token})
+
+    @classmethod
+    def get_credentials(cls, codes=None):
+        "Plain-text usernames and passwords for active cameras."
+        require_service('videovigilance.msg_credentials_forbidden')
+        domain = [('active', '=', True)]
+        if codes is not None:
+            domain.append(('code', 'in', list(codes)))
+        with without_check_access():
+            return [{
+                    'code': c.code,
+                    'username': c.username,
+                    'password': (secret.decrypt(c.password_encrypted)
+                        if c.password_encrypted else None),
+                    } for c in cls.search(domain)]
+
+    @classmethod
+    def for_web(cls, code):
+        "The active camera with this code, or None."
+        with without_check_access():
+            cameras = cls.search([('code', '=', code), ('active', '=', True)], limit=1)
+        return cameras[0] if cameras else None
+
+    @property
+    def ptz_available(self):
+        return bool(self.ptz and self.onvif_enabled and self.username
+            and self.password_encrypted)
+
+    def ptz_move(self, dx, dy, speed, user=None):
+        """Ask the service to start moving towards (dx, dy) as seen on screen; speed 0 to 1.
+
+        Raises live.ServiceOffline if the detection service, which is the one that
+        reaches the camera, is not connected.
+        """
+        from . import live
+        mailbox = live.mailbox()
+        # The picture from before the camera starts to move, if someone is watching.
+        frame = mailbox.peek(self.id)
+        mailbox.send(self.id, {
+                'op': 'move', 'dx': dx, 'dy': dy, 'speed': speed, 'seconds': PTZ_HOLD_S})
+        self._note_movement()
+        Pool().get('videovigilance.event').record_command(self, user, dx, dy, frame)
+
+    def ptz_stop(self):
+        from . import live
+        live.mailbox().send(self.id, {'op': 'stop'})
+        self._note_movement()
+        Pool().get('videovigilance.event').record_stop(self)
+
+    def _note_movement(self):
+        "Event notices are muted for a while after this (see Event.notify)."
+        with without_check_access():
+            type(self).write([self], {'ptz_moved_at': datetime.now()})
+
+    @staticmethod
+    def default_rtsp_port():
+        return 554
+
+    @staticmethod
+    def default_status():
+        return 'unknown'
+
+    @staticmethod
+    def _device_values(camera, device):
+        """Values to write from what the camera reports about itself over ONVIF.
+
+        Brand and model only fill the blanks: what someone typed is never overwritten.
+        Firmware, serial and hardware are the camera's own and are always kept up to date.
+        """
+        if not isinstance(device, dict):
+            return {}
+        values = {}
+        for field, key, only_if_blank in DEVICE_FIELDS:
+            value = device.get(key)
+            value = value.strip()[:DEVICE_TEXT_MAX] if isinstance(value, str) else ''
+            current = getattr(camera, field)
+            if value and value != current and not (only_if_blank and current):
+                values[field] = value
+        return values
+
+    @classmethod
+    def apply_heartbeat(cls, reports, now):
+        """Records the status reported by the service for each camera.
+
+        reports: [{'code', 'online', 'detail', 'frame', 'device'}]; 'frame' is an
+        optional JPEG (bytes), the camera's latest picture, kept as is until
+        the next one arrives; 'device' is what the camera says about itself over
+        ONVIF ({'manufacturer', 'model', 'firmware', 'serial', 'hardware'}).
+        Returns notices for status changes: outage and recovery (no notice when
+        changing from "unknown" to "online").
+        """
+        from .push import local_time
+        notices = []
+        with without_check_access():
+            reports = [r for r in reports
+                if isinstance(r, dict) and isinstance(r.get('code'), str)]
+            cameras = {c.code: c for c in cls.search(
+                    [('code', 'in', [r['code'] for r in reports])])}
+            for report in reports:
+                camera = cameras.get(report['code'])
+                if camera is None:
+                    continue
+                status = 'online' if report.get('online') else 'offline'
+                detail = str(report.get('detail') or '').strip()[:200]
+                values = {'status_checked_at': now, 'status_detail': detail}
+                frame = report.get('frame')
+                if (isinstance(frame, bytes) and frame.startswith(b'\xff\xd8')
+                        and len(frame) <= MAX_HEARTBEAT_FRAME):
+                    values.update(frame=frame, frame_at=now)
+                values.update(cls._device_values(camera, report.get('device')))
+                if status != camera.status:
+                    values.update(status=status, status_changed_at=now)
+                    if status == 'offline':
+                        notices.append({
+                                'title': 'Cámara sin conexión',
+                                'type': 'camera_offline', 'camera': camera.id,
+                                'body': '%s · %s · desde %s' % (
+                                    camera.name, detail or 'sin respuesta',
+                                    local_time(now)),
+                                })
+                    elif camera.status == 'offline':
+                        notices.append({
+                                'title': 'Cámara recuperada',
+                                'type': 'camera_online', 'camera': camera.id,
+                                'body': '%s · conectada de nuevo · %s' % (
+                                    camera.name, local_time(now)),
+                                })
+                cls.write([camera], values)
+        return notices
+
+    @staticmethod
+    def default_rotation():
+        return '0'
+
+    @staticmethod
+    def default_stream_path():
+        return 'stream1'
+
+    @staticmethod
+    def default_onvif_enabled():
+        return False
+
+    @staticmethod
+    def default_onvif_port():
+        return 2020
+
+    @staticmethod
+    def default_ptz():
+        return False
+
+    @staticmethod
+    def default_detect_persons():
+        return True
+
+    @staticmethod
+    def default_detect_motion():
+        return True
+
+
+class OpenAlarms(Wizard):
+    "Open the camera's alarms in the web app"
+    __name__ = 'videovigilance.camera.open_alarms'
+    start_state = 'open'
+    open = StateAction('videovigilance.act_camera_alarms_url')
+
+    def do_open(self, action):
+        from .voyager import application
+        camera = Pool().get('videovigilance.camera')(Transaction().context['active_id'])
+        web = application()
+        if web is None:
+            raise UserError(gettext('videovigilance.msg_web_not_configured'))
+        action['url'] = web.url('camera/%d' % camera.id)
+        return action, {}

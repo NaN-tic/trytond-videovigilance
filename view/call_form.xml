@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<form>
+    <label name="alarm"/>
+    <field name="alarm"/>
+    <label name="location"/>
+    <field name="location"/>
+    <label name="party"/>
+    <field name="party"/>
+    <label name="number"/>
+    <field name="number"/>
+    <label name="raised_at"/>
+    <field name="raised_at"/>
+    <label name="state"/>
+    <field name="state"/>
+    <label name="call_id"/>
+    <field name="call_id"/>
+    <label name="voice"/>
+    <field name="voice"/>
+    <label name="error"/>
+    <field name="error" colspan="3"/>
+    <label name="voice_error"/>
+    <field name="voice_error" colspan="3"/>
+</form>
