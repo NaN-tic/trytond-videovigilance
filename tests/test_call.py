@@ -149,13 +149,13 @@ class CallTestCase(unittest.TestCase):
 
     @with_transaction()
     def test_every_manager_is_called_from_the_configured_number(self):
-        _, camera = self.scenario(('+34 600 111 222', '972 000 000'))
+        _, camera = self.scenario(('+34 600 111 222', '+34 972 000 000'))
         self.event(camera)
         self.assertEqual(Pbx.dials, [])  # nothing is dialled before the commit
         self.run_queue()
         self.assertEqual(Pbx.dials, [
                 {'caller': '700', 'callee': '0034600111222'},
-                {'caller': '700', 'callee': '972000000'}])
+                {'caller': '700', 'callee': '0034972000000'}])
         self.assertEqual(Pbx.tokens, 1)
         calls = self.calls()
         self.assertEqual([c.state for c in calls], ['placed', 'placed'])
@@ -220,7 +220,7 @@ class CallTestCase(unittest.TestCase):
             self.scenario(('ext. 12',))
 
     def voice_scenario(self):
-        location, camera = self.scenario(('+34 600 111 222', '972 000 000'), voice=True)
+        location, camera = self.scenario(('+34 600 111 222', '+34 972 000 000'), voice=True)
         self.event(camera)
         return location
 
@@ -243,7 +243,7 @@ class CallTestCase(unittest.TestCase):
         self.assertEqual(Pbx.plays, [
                 {'number': '0034600111222', 'prompts': [name], 'count': 2,
                     'dial_permission': '701'},
-                {'number': '972000000', 'prompts': [name], 'count': 2,
+                {'number': '0034972000000', 'prompts': [name], 'count': 2,
                     'dial_permission': '701'}])
         self.assertEqual(Pbx.dials, [])
         calls = self.calls()
