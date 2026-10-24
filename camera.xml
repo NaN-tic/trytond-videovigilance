@@ -10,10 +10,6 @@
         <record model="res.group" id="group_service">
             <field name="name">Videovigilància: servei (credencials de càmera)</field>
         </record>
-        <record model="res.user-res.group" id="user_admin_group_admin">
-            <field name="user" ref="res.user_admin"/>
-            <field name="group" ref="group_admin"/>
-        </record>
         <menuitem name="Videovigilància" id="menu_videovigilance" sequence="100" icon="tryton-folder"/>
         <record model="ir.ui.menu-res.group" id="menu_main_group_admin">
             <field name="menu" ref="menu_videovigilance"/>
