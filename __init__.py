@@ -27,6 +27,7 @@ def register():
         push.Message,
         push.Delivery,
         voyager.Site,
+        voyager.Session,
         voyager.Layout,
         voyager.Error,
         module='videovigilance', type_='model')

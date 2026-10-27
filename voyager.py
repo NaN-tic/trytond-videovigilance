@@ -21,6 +21,7 @@ from datetime import datetime
 
 from dominate import document
 from dominate.tags import a, div, h1, input_, link, meta, p, script
+from sql import Null
 from trytond.model import fields
 from trytond.modules.voyager.voyager import (
     Component as VoyagerComponent, Endpoint as VoyagerEndpoint)
@@ -75,6 +76,27 @@ class Site(metaclass=PoolMeta):
             response.headers.setdefault(name, value)
         if response.mimetype == 'text/html':
             response.headers['Content-Type'] = 'text/html; charset=utf-8'
+
+
+class Session(metaclass=PoolMeta):
+    __name__ = 'www.session'
+
+    @classmethod
+    def __register__(cls, module):
+        super().__register__(module)
+        if module != 'videovigilance':
+            return
+        # The identity of this web app is the user of the Tryton session, never one kept
+        # here. Drop what the old login stored (its rows are the ones with a system_user):
+        # Voyager prefers a session's user to the one of the request, so a session left
+        # behind would keep acting as its old user. Web account sessions are not touched.
+        site = Pool().get('www.site').__table__()
+        table = cls.__table__()
+        cursor = Transaction().connection.cursor()
+        cursor.execute(*table.update(
+                [table.system_user, table.user], [None, None],
+                where=(table.system_user != Null) & table.site.in_(
+                    site.select(site.id, where=site.type == SITE_TYPE))))
 
 
 class Component(VoyagerComponent):
@@ -140,18 +162,55 @@ def url(name, **values):
 
 
 def csrf():
-    return hmac.new(session().session_id.encode(), b'videovigilance_web',
-        hashlib.sha256).hexdigest()
+    """CSRF token. With a Tryton session in the request it is bound to it, so ending it
+    (logout, expiry) invalidates it; otherwise it is bound to the session of this browser."""
+    request = voyager().request
+    tryton_session = request.session if request.user_id else None
+    secret = (tryton_session.token if tryton_session is not None
+        else session().session_id)
+    return hmac.new(secret.encode(), b'videovigilance_web', hashlib.sha256).hexdigest()
 
 
 def csrf_ok(token):
     return bool(token) and hmac.compare_digest(token, csrf())
 
 
+def tryton_user():
+    "The user of the Tryton session of this request (whatever way it logged in), or None."
+    user_id = voyager().request.user_id
+    return Pool().get('res.user')(user_id) if user_id else None
+
+
+def web_account():
+    "The web account (web.user) logged in with a password in this browser, or None."
+    account = session().user
+    if account is None:
+        return None
+    with without_check_access():
+        return account if account.active and account.password_hash else None
+
+
+def access_problem(user):
+    "(status, text) of why `user` (see tryton_user) cannot use the web app; None if it can."
+    if user is None:
+        return 401, 'Inicia sesión para ver los avisos.'
+    if not has_access(user):
+        return 403, 'Tu usuario de Tryton no tiene acceso a esta web.'
+    with without_check_access():
+        has_email = bool((user.email or '').strip())
+    if not has_email:
+        return 403, ('Tu usuario de Tryton no tiene correo: añádelo en Preferencias '
+            'para poder recibir avisos.')
+    return None
+
+
 def current_user():
-    """Tryton user with an active session and web access, or None."""
-    user = session().system_user
-    return user if user is not None and has_access(user) else None
+    """Who is using the web app: the user of the Tryton session if it has access, else the
+    web account logged in with a password, else None. A web account only reads (is_admin)."""
+    user = tryton_user()
+    if user is not None and access_problem(user) is None:
+        return user
+    return web_account()
 
 
 def application():
@@ -197,11 +256,12 @@ def nav(active):
     return root
 
 
-def rotate_session(user=None, web_user=None):
-    """Change the session ID on login or logout (preventing session fixation)."""
+def rotate_session(account=None):
+    """Change the session ID on login or logout (preventing session fixation).
+
+    `account` is the web account (web.user) that logs in; None logs out."""
     current = session()
-    current.system_user = user
-    current.user = web_user
+    current.user = account
     current.session_id = secrets.token_urlsafe()
     current.save()
 
