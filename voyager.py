@@ -22,12 +22,15 @@ from datetime import datetime
 from dominate import document
 from dominate.tags import a, div, h1, input_, link, meta, p, script
 from sql import Null
+from trytond.exceptions import UserError
+from trytond.i18n import gettext
 from trytond.model import fields
 from trytond.modules.voyager.voyager import (
     Component as VoyagerComponent, Endpoint as VoyagerEndpoint)
 from trytond.pool import Pool, PoolMeta
 from trytond.protocols.wrappers import Response
 from trytond.transaction import Transaction, without_check_access
+from trytond.wizard import StateAction, Wizard
 
 from .assets import VERSION
 from .push import APPLICATION, has_access, is_admin, web_user_for
@@ -355,3 +358,17 @@ class Error(Endpoint):
             a('Volver al inicio →', href=url('index'),
                 cls='mt-8 inline-block font-semibold text-teal-300 hover:text-teal-200')
         return page(content, title=f'{status} {title}')
+
+
+class OpenWeb(Wizard):
+    "Open the web app from the Tryton menu"
+    __name__ = 'videovigilance.open_web'
+    start_state = 'open'
+    open = StateAction('videovigilance.act_web_url')
+
+    def do_open(self, action):
+        web = application()
+        if web is None:
+            raise UserError(gettext('videovigilance.msg_web_not_configured'))
+        action['url'] = web.url()
+        return action, {}
