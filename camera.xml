@@ -20,12 +20,12 @@
             <field name="group" ref="group_reader"/>
         </record>
         <record model="ir.action.url" id="act_web_url">
-            <field name="name">Web d'avisos</field>
+            <field name="name">Notices Web App</field>
             <!-- Replaced by the web app's address in OpenWeb.do_open -->
             <field name="url">about:blank</field>
         </record>
         <record model="ir.action.wizard" id="wizard_open_web">
-            <field name="name">Web d'avisos</field>
+            <field name="name">Notices Web App</field>
             <field name="wiz_name">videovigilance.open_web</field>
         </record>
         <menuitem action="wizard_open_web" parent="menu_videovigilance" id="menu_open_web" sequence="5"/>
