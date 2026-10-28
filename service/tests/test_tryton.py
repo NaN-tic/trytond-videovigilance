@@ -3,8 +3,10 @@ import json
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from unittest.mock import patch
 
-from service.tryton import CameraConfig, TrytonClient, TrytonRejected, TrytonUnavailable
+from service.tryton import (
+    FRAME_TIMEOUT_S, CameraConfig, TrytonClient, TrytonRejected, TrytonUnavailable)
 
 KEY = 'the-key'
 JPEG = b'\xff\xd8jpeg'
@@ -98,6 +100,10 @@ class ClientTest(unittest.TestCase):
                     TrytonRejected),
                 (404, {'error': 'no existe la cámara'}, TrytonRejected),
                 (413, {'error': 'demasiado grande'}, TrytonRejected),
+                # Whatever the page says, an event over the size limit is not worth sending again.
+                (413, None, TrytonRejected),
+                # Another request is storing the same event: ask again later.
+                (409, {'error': 'en curso'}, TrytonUnavailable),
                 # A Tryton without the API answers 404 with a web page: that is not the event's fault.
                 (404, None, TrytonUnavailable),
                 (500, {'error': 'boom'}, TrytonUnavailable),
@@ -125,6 +131,16 @@ class ClientTest(unittest.TestCase):
                     {'code': 'CAM1', 'online': True, 'detail': ''},
                     {'code': 'CAM2', 'online': False, 'detail': 'sin respuesta'}]})
         self.assertEqual((Tryton.log[1][2]['Content-Type'], Tryton.log[1][3]), ('image/jpeg', JPEG))
+
+    def test_a_frame_does_not_get_the_long_timeout_of_the_heartbeat(self):
+        Tryton.answers['POST /cameras/videovigilance/heartbeat'] = answer(200, {})
+        Tryton.answers['PUT /cameras/videovigilance/cameras/3/frame'] = answer(204)
+        with patch.object(self.client._session, 'request',
+                wraps=self.client._session.request) as request:
+            self.client.heartbeat(
+                [{'id': 3, 'code': 'CAM1', 'online': True, 'detail': '', 'frame': JPEG}])
+        timeouts = [call.kwargs['timeout'] for call in request.call_args_list]
+        self.assertEqual(timeouts, [15, FRAME_TIMEOUT_S])
 
     def test_a_frame_that_cannot_be_kept_does_not_fail_the_heartbeat(self):
         Tryton.answers['POST /cameras/videovigilance/heartbeat'] = answer(200, {'camera_interval': 5})

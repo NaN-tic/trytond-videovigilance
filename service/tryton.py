@@ -7,6 +7,9 @@ import requests
 
 log = logging.getLogger(__name__)
 
+# A frame is a courtesy after the heartbeat: it must not hold up the next one.
+FRAME_TIMEOUT_S = 5
+
 
 class TrytonUnavailable(Exception):
     """Network, authentication, or server error: retrying is appropriate."""
@@ -87,19 +90,20 @@ class TrytonClient:
         self._session.headers['Authorization'] = f'Bearer {token}'
         self._config = None  # (ETag, cameras) of the last answer
 
-    def _request(self, method, path, **options):
+    def _request(self, method, path, timeout=None, **options):
         "The response to a request that Tryton accepted."
         try:
             response = self._session.request(
-                method, f'{self._url}/{path}', timeout=self._timeout, **options)
+                method, f'{self._url}/{path}', timeout=timeout or self._timeout, **options)
         except requests.RequestException as error:
             raise TrytonUnavailable(type(error).__name__) from None
         if response.status_code in (401, 403):
             raise TrytonUnavailable('Tryton rechaza la clave del servicio')
         if response.status_code >= 400:
             why = _why(response)
-            if why and response.status_code in (400, 404, 413):
-                raise TrytonRejected(f'{method} {path}: {why}')
+            # A request over the size limit does not get smaller by being sent again.
+            if response.status_code == 413 or (why and response.status_code in (400, 404)):
+                raise TrytonRejected(f'{method} {path}: {why or "demasiado grande"}')
             raise TrytonUnavailable(f'HTTP {response.status_code}')
         return response
 
@@ -154,7 +158,7 @@ class TrytonClient:
             if camera.get('frame'):
                 try:
                     self._request('PUT', f"cameras/{camera['id']}/frame",
-                        data=camera['frame'], headers=self.JPEG)
+                        data=camera['frame'], headers=self.JPEG, timeout=FRAME_TIMEOUT_S)
                 except (TrytonUnavailable, TrytonRejected) as error:
                     log.warning('%s: no se pudo enviar la imagen (%s)', camera['code'], error)
         return reply
