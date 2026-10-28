@@ -128,17 +128,17 @@ class LocationManager(ModelSQL, ModelView):
     __name__ = 'videovigilance.location.manager'
 
     location = fields.Many2One(
-        'videovigilance.location', "Ubicació", required=True, ondelete='CASCADE')
-    sequence = fields.Integer("Seqüència")
+        'videovigilance.location', "Location", required=True, ondelete='CASCADE')
+    sequence = fields.Integer("Sequence")
     party = fields.Many2One(
-        'party.party', "Encarregat", required=True, ondelete='RESTRICT')
+        'party.party', "Manager", required=True, ondelete='RESTRICT')
     phone = fields.Many2One(
-        'party.contact_mechanism', "Telèfon", required=True, ondelete='RESTRICT',
+        'party.contact_mechanism', "Phone", required=True, ondelete='RESTRICT',
         domain=[
             ('party', '=', Eval('party', -1)),
             ('type', 'in', PHONE_TYPES),
             ],
-        help="Número al qual es truca. Només xifres (el + es converteix en 00).")
+        help="Number to call. Digits only (the + becomes 00).")
 
     @classmethod
     def __setup__(cls):
@@ -171,27 +171,26 @@ class Call(ModelSQL, ModelView):
     __name__ = 'videovigilance.alarm.call'
 
     alarm = fields.Many2One(
-        'videovigilance.alarm', "Alarma", required=True, readonly=True,
+        'videovigilance.alarm', "Alarm", required=True, readonly=True,
         ondelete='CASCADE')
     location = fields.Many2One(
-        'videovigilance.location', "Ubicació", readonly=True, ondelete='SET NULL')
+        'videovigilance.location', "Location", readonly=True, ondelete='SET NULL')
     party = fields.Many2One(
-        'party.party', "Encarregat", readonly=True, ondelete='SET NULL')
-    number = fields.Char("Número", required=True, readonly=True)
-    raised_at = fields.DateTime("Data", required=True, readonly=True)
+        'party.party', "Manager", readonly=True, ondelete='SET NULL')
+    number = fields.Char("Number", required=True, readonly=True)
+    raised_at = fields.DateTime("Date", required=True, readonly=True)
     state = fields.Selection(
-        [('pending', "Pendent"), ('placed', "Iniciada"), ('failed', "Fallida")],
-        "Estat", required=True, readonly=True,
-        help="«Iniciada» vol dir que la centraleta ha acceptat la ordre de "
-        "trucar, no que l'encarregat hagi respost.")
-    call_id = fields.Char("Identificador de la trucada", readonly=True)
+        [('pending', "Pending"), ('placed', "Started"), ('failed', "Failed")],
+        "Status", required=True, readonly=True,
+        help="'Started' means the PBX accepted the order to call, not that the manager answered.")
+    call_id = fields.Char("Call ID", readonly=True)
     error = fields.Char("Error", readonly=True)
     voice = fields.Boolean(
-        "Amb veu", readonly=True,
-        help="La centraleta ha llegit l'alarma a l'encarregat. Si no, només ha sonat.")
+        "With Voice", readonly=True,
+        help="The PBX read the alarm to the manager. If not, the phone only rang.")
     voice_error = fields.Char(
-        "Error de la veu", readonly=True,
-        help="Per què no s'ha llegit l'alarma. La trucada s'ha fet igualment.")
+        "Voice Error", readonly=True,
+        help="Why the alarm was not read. The call was made anyway.")
 
     @classmethod
     def __setup__(cls):

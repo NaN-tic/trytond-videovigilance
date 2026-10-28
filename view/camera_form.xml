@@ -8,13 +8,13 @@
     <field name="location"/>
     <label name="active"/>
     <field name="active"/>
-    <button name="open_alarms" string="Avisos" colspan="2"/>
+    <button name="open_alarms" string="Notices" colspan="2"/>
     <label name="manufacturer"/>
     <field name="manufacturer"/>
     <label name="device_model"/>
     <field name="device_model"/>
     <notebook colspan="4">
-        <page string="Connexió" id="connection">
+        <page string="Connection" id="connection">
             <label name="host"/>
             <field name="host"/>
             <label name="rtsp_port"/>
@@ -40,7 +40,7 @@
             <label name="detect_motion"/>
             <field name="detect_motion"/>
         </page>
-        <page string="Estat" id="status">
+        <page string="Status" id="status">
             <label name="status"/>
             <field name="status"/>
             <label name="status_changed_at"/>
@@ -62,7 +62,7 @@
             <newline/>
             <field name="frame" widget="image" colspan="4" height="360" width="640"/>
         </page>
-        <page string="Observacions" id="notes">
+        <page string="Notes" id="notes">
             <field name="notes" colspan="4"/>
         </page>
     </notebook>

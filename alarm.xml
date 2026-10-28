@@ -12,7 +12,7 @@
             <field name="name">alarm_list</field>
         </record>
         <record model="ir.action.act_window" id="act_alarm">
-            <field name="name">Alarmes</field>
+            <field name="name">Alarms</field>
             <field name="res_model">videovigilance.alarm</field>
         </record>
         <record model="ir.action.act_window.view" id="act_alarm_view1">
@@ -26,14 +26,14 @@
             <field name="act_window" ref="act_alarm"/>
         </record>
         <record model="ir.action.act_window.domain" id="act_alarm_domain_pending">
-            <field name="name">Pendents</field>
+            <field name="name">Pending</field>
             <field name="sequence" eval="10"/>
             <field name="domain" eval="[('state', '=', 'pending')]" pyson="1"/>
             <field name="count" eval="True"/>
             <field name="act_window" ref="act_alarm"/>
         </record>
         <record model="ir.action.act_window.domain" id="act_alarm_domain_all">
-            <field name="name">Totes</field>
+            <field name="name">All</field>
             <field name="sequence" eval="20"/>
             <field name="domain" eval="[]" pyson="1"/>
             <field name="act_window" ref="act_alarm"/>
@@ -73,7 +73,7 @@
         <record model="ir.model.button" id="alarm_mark_seen_button">
             <field name="model">videovigilance.alarm</field>
             <field name="name">mark_seen</field>
-            <field name="string">Marcar com a vista</field>
+            <field name="string">Mark as Seen</field>
         </record>
         <record model="ir.model.button-res.group" id="alarm_mark_seen_button_group_admin">
             <field name="button" ref="alarm_mark_seen_button"/>

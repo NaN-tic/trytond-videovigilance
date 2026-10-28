@@ -12,7 +12,7 @@
             <field name="name">event_list</field>
         </record>
         <record model="ir.action.act_window" id="act_event">
-            <field name="name">Esdeveniments</field>
+            <field name="name">Events</field>
             <field name="res_model">videovigilance.event</field>
         </record>
         <record model="ir.action.act_window.view" id="act_event_view1">
@@ -26,27 +26,27 @@
             <field name="act_window" ref="act_event"/>
         </record>
         <record model="ir.action.act_window.domain" id="act_event_domain_all">
-            <field name="name">Tots</field>
+            <field name="name">All</field>
             <field name="sequence" eval="10"/>
             <field name="domain" eval="[]" pyson="1"/>
             <field name="act_window" ref="act_event"/>
         </record>
         <record model="ir.action.act_window.domain" id="act_event_domain_person">
-            <field name="name">Moviment de persones</field>
+            <field name="name">Person Motion</field>
             <field name="sequence" eval="20"/>
             <field name="domain" eval="[('type', '=', 'person_motion')]" pyson="1"/>
             <field name="count" eval="True"/>
             <field name="act_window" ref="act_event"/>
         </record>
         <record model="ir.action.act_window.domain" id="act_event_domain_presence">
-            <field name="name">Detecció de persones</field>
+            <field name="name">Person Detection</field>
             <field name="sequence" eval="25"/>
             <field name="domain" eval="[('type', '=', 'person_detection')]" pyson="1"/>
             <field name="count" eval="True"/>
             <field name="act_window" ref="act_event"/>
         </record>
         <record model="ir.action.act_window.domain" id="act_event_domain_movement">
-            <field name="name">Moviments de càmera</field>
+            <field name="name">Camera Movements</field>
             <field name="sequence" eval="30"/>
             <field name="domain" eval="[('type', '=', 'camera_movement')]" pyson="1"/>
             <field name="count" eval="True"/>
@@ -74,14 +74,6 @@
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
             <field name="perm_create" eval="False"/>
-            <field name="perm_delete" eval="False"/>
-        </record>
-        <record model="ir.model.access" id="access_event_service">
-            <field name="model">videovigilance.event</field>
-            <field name="group" ref="group_service"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="False"/>
-            <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="False"/>
         </record>
         <record model="ir.model.access" id="access_event_admin">

@@ -56,7 +56,7 @@ class Site(metaclass=PoolMeta):
     @classmethod
     def __setup__(cls):
         super().__setup__()
-        cls.type.selection.append((SITE_TYPE, "Videovigilància: alarma i avisos"))
+        cls.type.selection.append((SITE_TYPE, "Video Surveillance: Alarm and Notices"))
 
     @classmethod
     def set_session_cookie(cls, response, session):

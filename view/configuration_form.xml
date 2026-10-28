@@ -7,12 +7,12 @@
     <field name="alarm_changed_at"/>
     <label name="alarm_changed_by"/>
     <field name="alarm_changed_by"/>
-    <separator string="Batec de càmeres" id="camera_heartbeat" colspan="4"/>
+    <separator string="Camera Heartbeat" id="camera_heartbeat" colspan="4"/>
     <label name="camera_heartbeat_interval"/>
     <field name="camera_heartbeat_interval"/>
     <label name="camera_heartbeat_failures"/>
     <field name="camera_heartbeat_failures"/>
-    <separator string="Batec del servei" id="service_heartbeat" colspan="4"/>
+    <separator string="Service Heartbeat" id="service_heartbeat" colspan="4"/>
     <label name="service_heartbeat_interval"/>
     <field name="service_heartbeat_interval"/>
     <label name="service_heartbeat_misses"/>
@@ -21,10 +21,10 @@
     <field name="service_status"/>
     <label name="service_last_seen"/>
     <field name="service_last_seen"/>
-    <separator string="Moviment de la càmera" id="ptz" colspan="4"/>
+    <separator string="Camera Movement" id="ptz" colspan="4"/>
     <label name="ptz_quiet_seconds"/>
     <field name="ptz_quiet_seconds"/>
-    <separator string="Trucades als encarregats (Yeastar)" id="calls" colspan="4"/>
+    <separator string="Calls to Managers (Yeastar)" id="calls" colspan="4"/>
     <label name="yeastar_pbx"/>
     <field name="yeastar_pbx"/>
     <label name="yeastar_caller"/>

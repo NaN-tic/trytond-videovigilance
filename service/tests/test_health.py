@@ -11,7 +11,7 @@ from service.tryton import TrytonUnavailable
 
 
 def camera(code='CAM', host='127.0.0.1', port=554):
-    return SimpleNamespace(code=code, host=host, rtsp_port=port)
+    return SimpleNamespace(id=1, code=code, host=host, rtsp_port=port)
 
 
 def serve_once(reply):
@@ -114,7 +114,8 @@ class MonitorTest(unittest.TestCase):
     def test_unreachable_camera_reports_why(self):
         monitor = self.monitor([(camera(), True, lambda: None)], lambda host, port: (False, 'sin respuesta'), failures=1)
         monitor.step()
-        self.assertEqual(monitor.reports(), [{'code': 'CAM', 'online': False, 'detail': 'sin respuesta'}])
+        self.assertEqual(monitor.reports(),
+            [{'id': 1, 'code': 'CAM', 'online': False, 'detail': 'sin respuesta'}])
 
     def test_online_camera_reports_its_latest_frame_taken_at_report_time(self):
         frames = [b'\xff\xd8one', b'\xff\xd8two']
@@ -140,7 +141,7 @@ class MonitorTest(unittest.TestCase):
         self.assertEqual({r['code'] for r in monitor.reports()}, {'A'})
 
     def onvif_camera(self, code='CAM', **values):
-        return SimpleNamespace(code=code, host='h', rtsp_port=554, onvif_enabled=True,
+        return SimpleNamespace(id=1, code=code, host='h', rtsp_port=554, onvif_enabled=True,
             onvif_port=2020, username='user', password='secret', **values)
 
     def test_brand_and_model_are_reported_and_read_once_until_they_are_due_again(self):
@@ -182,11 +183,12 @@ class MonitorTest(unittest.TestCase):
 
     def test_cameras_without_onvif_or_login_or_connection_are_not_asked(self):
         asked = []
+        no_login = self.onvif_camera('NOLOGIN')
+        no_login.password = None
         monitor = self.monitor([
                 (camera('PLAIN'), True, lambda: None),
-                (self.onvif_camera('NOLOGIN', ), True, lambda: None)],
+                (no_login, True, lambda: None)],
             lambda host, port: (True, ''), device_info=lambda c: asked.append(c.code) or {'model': 'M'})
-        monitor._cameras()[1][0].password = None
         monitor.step()
         self.assertEqual(asked, [])
         down = self.monitor([(self.onvif_camera(), True, lambda: None)],

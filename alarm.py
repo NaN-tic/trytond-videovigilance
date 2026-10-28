@@ -17,12 +17,12 @@ from trytond.transaction import Transaction, without_check_access
 
 logger = logging.getLogger(__name__)
 TYPES = [
-    ('person_motion', "Moviment de persona"),
-    ('person_detection', "Detecció de persona"),
-    ('camera_offline', "Càmera sense connexió"),
-    ('camera_online', "Càmera recuperada"),
-    ('service_down', "Servei de detecció sense senyal"),
-    ('service_up', "Servei de detecció recuperat"),
+    ('person_motion', "Person Motion"),
+    ('person_detection', "Person Detection"),
+    ('camera_offline', "Camera Offline"),
+    ('camera_online', "Camera Recovered"),
+    ('service_down', "Detection Service Silent"),
+    ('service_up', "Detection Service Recovered"),
     ]
 
 
@@ -30,31 +30,30 @@ class Alarm(ModelSQL, ModelView):
     "Alarma de videovigilància"
     __name__ = 'videovigilance.alarm'
 
-    type = fields.Selection(TYPES, "Tipus", required=True, readonly=True)
+    type = fields.Selection(TYPES, "Type", required=True, readonly=True)
     camera = fields.Many2One(
-        'videovigilance.camera', "Càmera", readonly=True, ondelete='SET NULL',
-        help="Buida en les alarmes que no són d'una càmera concreta.")
+        'videovigilance.camera', "Camera", readonly=True, ondelete='SET NULL',
+        help="Empty for alarms that do not belong to a specific camera.")
     event = fields.Many2One(
-        'videovigilance.event', "Esdeveniment", readonly=True, ondelete='SET NULL',
-        help="Detecció que ha provocat l'alarma.")
-    raised_at = fields.DateTime("Data", required=True, readonly=True)
-    title = fields.Char("Títol", required=True, readonly=True)
-    body = fields.Char("Missatge", readonly=True)
+        'videovigilance.event', "Event", readonly=True, ondelete='SET NULL',
+        help="Detection that triggered the alarm.")
+    raised_at = fields.DateTime("Date", required=True, readonly=True)
+    title = fields.Char("Title", required=True, readonly=True)
+    body = fields.Char("Message", readonly=True)
     snapshot = fields.Function(
-        fields.Binary("Captura", readonly=True), 'get_snapshot',
+        fields.Binary("Snapshot", readonly=True), 'get_snapshot',
         )
     frame = fields.Binary(
-        "Fotograma de la càmera", readonly=True,
-        help="Darrera imatge de la càmera quan va saltar l'avís d'una caiguda o "
-        "recuperació.")
+        "Camera Frame", readonly=True,
+        help="Last image of the camera when the notice of an outage or recovery was raised.")
     state = fields.Selection(
-        [('pending', "Pendent"), ('seen', "Vista")], "Estat",
+        [('pending', "Pending"), ('seen', "Seen")], "Status",
         required=True, readonly=True)
-    seen_at = fields.DateTime("Vista el", readonly=True)
+    seen_at = fields.DateTime("Seen At", readonly=True)
     seen_by = fields.Many2One(
-        'res.user', "Vista per", readonly=True, ondelete='SET NULL')
+        'res.user', "Seen By", readonly=True, ondelete='SET NULL')
     calls = fields.One2Many(
-        'videovigilance.alarm.call', 'alarm', "Trucades", readonly=True)
+        'videovigilance.alarm.call', 'alarm', "Calls", readonly=True)
 
     @classmethod
     def get_snapshot(cls, alarms, name):

@@ -20,13 +20,12 @@ class FakeTryton:
             raise TrytonRejected('validación')
         if self.fail_next:
             raise self.fail_next.pop(0)
-        self.created.append((event['uid'], snapshot))
+        # Tryton keeps the first event of each uid.
+        if all(uid != event['uid'] for uid, _ in self.created):
+            self.created.append((event['uid'], snapshot))
         if self.lose_response:
             self.lose_response = False
             raise TrytonUnavailable('timeout')
-
-    def event_exists(self, uid):
-        return any(created == uid for created, _ in self.created)
 
 
 class Harness(unittest.TestCase):

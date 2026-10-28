@@ -11,20 +11,10 @@ from .motion import MotionConfig
 ROOT = Path.cwd()
 
 
-def relay_url_for(tryton_url):
-    """Tryton's live relay routes sit next to the RPC ones:
-    .../<database>/rpc/ becomes .../<database>/avisos/relay."""
-    base = tryton_url.rstrip('/')
-    if not base.endswith('/rpc'):
-        raise ValueError('TRYTON_URL debe terminar en /<base de datos>/rpc/ (o defina RELAY_URL)')
-    return base[:-len('rpc')] + 'avisos/relay'
-
-
 @dataclass(frozen=True)
 class Settings:
-    tryton_url: str
-    tryton_user: str
-    tryton_password: str
+    tryton_api_url: str
+    tryton_api_token: str
     model: Path
     confidence: float
     nms: float
@@ -34,7 +24,6 @@ class Settings:
     refresh_s: float
     outbox: Path
     motion: MotionConfig
-    relay_url: str
     live_fps: float
 
     @classmethod
@@ -54,15 +43,14 @@ class Settings:
             value = get(name, Path, Path(default))
             return value if value.is_absolute() else ROOT / value
 
-        user, password = env.get('TRYTON_USER'), env.get('TRYTON_PASSWORD')
-        if not user or not password:
-            raise ValueError('Faltan TRYTON_USER o TRYTON_PASSWORD en .env')
+        token = env.get('TRYTON_API_TOKEN')
+        if not token:
+            raise ValueError('Falta TRYTON_API_TOKEN en .env')
         motion = MotionConfig()
-        tryton_url = env.get('TRYTON_URL') or 'http://127.0.0.1:8010/cameras/rpc/'
         settings = cls(
-            tryton_url=tryton_url,
-            tryton_user=user,
-            tryton_password=password,
+            tryton_api_url=(env.get('TRYTON_API_URL')
+                or 'http://127.0.0.1:8010/cameras/videovigilance'),
+            tryton_api_token=token,
             model=path('DETECTION_MODEL', 'models/yolox_s_int8_pct.onnx'),
             confidence=get('DETECTION_CONFIDENCE', float, 0.5),
             nms=get('DETECTION_NMS', float, 0.45),
@@ -78,7 +66,6 @@ class Settings:
                 end_s=get('MOTION_END_S', float, motion.end_s),
                 max_episode_s=get('MOTION_MAX_EPISODE_S', float, motion.max_episode_s),
                 ),
-            relay_url=env.get('RELAY_URL') or relay_url_for(tryton_url),
             live_fps=get('LIVE_FPS', float, 5.0),
             )
         if not 0 < settings.fps <= 30:

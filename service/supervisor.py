@@ -8,7 +8,7 @@ from .live import LiveRelay
 from .outbox import Outbox
 from .pipeline import InferencePool
 from .sender import EventSender
-from .tryton import RelayClient, RelayToken, TrytonClient, TrytonRejected, TrytonUnavailable
+from .tryton import TrytonClient, TrytonRejected, TrytonUnavailable
 
 log = logging.getLogger(__name__)
 
@@ -22,21 +22,17 @@ class Supervisor:
         self._outbox = Outbox(settings.outbox)
         self._pool = InferencePool(settings, self._stop)
         # One client per thread: requests.Session is not thread-safe.
-        self._client = TrytonClient(settings.tryton_url, settings.tryton_user, settings.tryton_password)
-        self._sender = EventSender(
-            TrytonClient(settings.tryton_url, settings.tryton_user, settings.tryton_password),
-            self._outbox, self._stop)
+        def client(timeout=15):
+            return TrytonClient(settings.tryton_api_url, settings.tryton_api_token, timeout)
+
+        self._client = client()
+        self._sender = EventSender(client(), self._outbox, self._stop)
         self._runtimes = {}
         self._latest = {}  # the cameras as Tryton has them now (a running one keeps its old object)
         self._health = HealthSettings()
         self._monitor = CameraMonitor(self._video_state, self._health, self._stop)
-        self._heartbeat = HeartbeatSender(
-            TrytonClient(settings.tryton_url, settings.tryton_user, settings.tryton_password),
-            self._monitor, self._health, self._stop)
-        tokens = RelayToken(
-            TrytonClient(settings.tryton_url, settings.tryton_user, settings.tryton_password))
-        self._live = LiveRelay(
-            lambda: RelayClient(settings.relay_url, tokens), settings.live_fps, self._stop)
+        self._heartbeat = HeartbeatSender(client(), self._monitor, self._health, self._stop)
+        self._live = LiveRelay(lambda: client(timeout=5), settings.live_fps, self._stop)
 
     def run(self):
         for signum in (signal.SIGINT, signal.SIGTERM):

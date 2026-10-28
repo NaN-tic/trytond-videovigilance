@@ -28,10 +28,9 @@ class EventSender(threading.Thread):
         if item is None:
             return False
         try:
-            # After a previous attempt, the event may have been created even if
-            # the response was lost: checking first avoids duplicates.
-            if not (item.attempts and self._client.event_exists(item.uid)):
-                self._client.create_event(item.payload, item.snapshot)
+            # Tryton keeps the first event of each uid: sending it again after a lost
+            # answer creates no duplicate.
+            self._client.create_event(item.payload, item.snapshot)
             self._outbox.done(item.uid)
             log.info('Evento %s enviado a Tryton', item.uid)
             return True

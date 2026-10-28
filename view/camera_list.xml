@@ -5,8 +5,8 @@
     <field name="location"/>
     <field name="host"/>
     <field name="status"/>
-    <field name="status_checked_at" widget="date" string="Data de la comprovació"/>
-    <field name="status_checked_at" widget="time" string="Hora de la comprovació"/>
+    <field name="status_checked_at" widget="date" string="Check Date"/>
+    <field name="status_checked_at" widget="time" string="Check Time"/>
     <field name="manufacturer"/>
     <field name="device_model"/>
     <field name="onvif_enabled"/>

@@ -1,0 +1,1289 @@
+#
+msgid ""
+msgstr "Content-Type: text/plain; charset=utf-8\n"
+
+msgctxt "field:notification.web.message,event:"
+msgid "Event"
+msgstr "Esdeveniment"
+
+msgctxt "field:res.user,web_user:"
+msgid "Web User"
+msgstr "Usuari web"
+
+msgctxt "field:videovigilance.alarm,body:"
+msgid "Message"
+msgstr "Missatge"
+
+msgctxt "field:videovigilance.alarm,calls:"
+msgid "Calls"
+msgstr "Trucades"
+
+msgctxt "field:videovigilance.alarm,camera:"
+msgid "Camera"
+msgstr "Càmera"
+
+msgctxt "field:videovigilance.alarm,event:"
+msgid "Event"
+msgstr "Esdeveniment"
+
+msgctxt "field:videovigilance.alarm,frame:"
+msgid "Camera Frame"
+msgstr "Fotograma de la càmera"
+
+msgctxt "field:videovigilance.alarm,raised_at:"
+msgid "Date"
+msgstr "Data"
+
+msgctxt "field:videovigilance.alarm,seen_at:"
+msgid "Seen At"
+msgstr "Vista el"
+
+msgctxt "field:videovigilance.alarm,seen_by:"
+msgid "Seen By"
+msgstr "Vista per"
+
+msgctxt "field:videovigilance.alarm,snapshot:"
+msgid "Snapshot"
+msgstr "Captura"
+
+msgctxt "field:videovigilance.alarm,state:"
+msgid "Status"
+msgstr "Estat"
+
+msgctxt "field:videovigilance.alarm,title:"
+msgid "Title"
+msgstr "Títol"
+
+msgctxt "field:videovigilance.alarm,type:"
+msgid "Type"
+msgstr "Tipus"
+
+msgctxt "field:videovigilance.alarm.call,alarm:"
+msgid "Alarm"
+msgstr "Alarma"
+
+msgctxt "field:videovigilance.alarm.call,call_id:"
+msgid "Call ID"
+msgstr "Identificador de la trucada"
+
+msgctxt "field:videovigilance.alarm.call,error:"
+msgid "Error"
+msgstr "Error"
+
+msgctxt "field:videovigilance.alarm.call,location:"
+msgid "Location"
+msgstr "Ubicació"
+
+msgctxt "field:videovigilance.alarm.call,number:"
+msgid "Number"
+msgstr "Número"
+
+msgctxt "field:videovigilance.alarm.call,party:"
+msgid "Manager"
+msgstr "Encarregat"
+
+msgctxt "field:videovigilance.alarm.call,raised_at:"
+msgid "Date"
+msgstr "Data"
+
+msgctxt "field:videovigilance.alarm.call,state:"
+msgid "Status"
+msgstr "Estat"
+
+msgctxt "field:videovigilance.alarm.call,voice:"
+msgid "With Voice"
+msgstr "Amb veu"
+
+msgctxt "field:videovigilance.alarm.call,voice_error:"
+msgid "Voice Error"
+msgstr "Error de la veu"
+
+msgctxt "field:videovigilance.camera,code:"
+msgid "Code"
+msgstr "Codi"
+
+msgctxt "field:videovigilance.camera,detect_motion:"
+msgid "Motion Detection"
+msgstr "Detecció de moviment"
+
+msgctxt "field:videovigilance.camera,detect_persons:"
+msgid "Person Detection"
+msgstr "Detecció de persones"
+
+msgctxt "field:videovigilance.camera,device_model:"
+msgid "Model"
+msgstr "Model"
+
+msgctxt "field:videovigilance.camera,firmware_version:"
+msgid "Firmware Version"
+msgstr "Versió del programari"
+
+msgctxt "field:videovigilance.camera,frame:"
+msgid "Last Frame"
+msgstr "Darrer fotograma"
+
+msgctxt "field:videovigilance.camera,frame_at:"
+msgid "Frame Time"
+msgstr "Hora del fotograma"
+
+msgctxt "field:videovigilance.camera,hardware_id:"
+msgid "Hardware Version"
+msgstr "Versió del maquinari"
+
+msgctxt "field:videovigilance.camera,host:"
+msgid "Host"
+msgstr "Host"
+
+msgctxt "field:videovigilance.camera,location:"
+msgid "Location"
+msgstr "Ubicació"
+
+msgctxt "field:videovigilance.camera,manufacturer:"
+msgid "Manufacturer"
+msgstr "Fabricant"
+
+msgctxt "field:videovigilance.camera,name:"
+msgid "Name"
+msgstr "Nom"
+
+msgctxt "field:videovigilance.camera,notes:"
+msgid "Notes"
+msgstr "Observacions"
+
+msgctxt "field:videovigilance.camera,onvif_enabled:"
+msgid "ONVIF Enabled"
+msgstr "ONVIF habilitat"
+
+msgctxt "field:videovigilance.camera,onvif_port:"
+msgid "ONVIF Port"
+msgstr "Port ONVIF"
+
+msgctxt "field:videovigilance.camera,password:"
+msgid "Password"
+msgstr "Contrasenya"
+
+msgctxt "field:videovigilance.camera,password_encrypted:"
+msgid "Encrypted Password"
+msgstr "Contrasenya xifrada"
+
+msgctxt "field:videovigilance.camera,ptz:"
+msgid "PTZ Supported"
+msgstr "Compatible amb PTZ"
+
+msgctxt "field:videovigilance.camera,ptz_moved_at:"
+msgid "Last Movement"
+msgstr "Darrer moviment"
+
+msgctxt "field:videovigilance.camera,rotation:"
+msgid "Image Rotation"
+msgstr "Rotació de la imatge"
+
+msgctxt "field:videovigilance.camera,rtsp_port:"
+msgid "RTSP Port"
+msgstr "Port RTSP"
+
+msgctxt "field:videovigilance.camera,secondary_stream_path:"
+msgid "Secondary Stream"
+msgstr "Flux secundari"
+
+msgctxt "field:videovigilance.camera,serial_number:"
+msgid "Serial Number"
+msgstr "Número de sèrie"
+
+msgctxt "field:videovigilance.camera,status:"
+msgid "Status"
+msgstr "Estat"
+
+msgctxt "field:videovigilance.camera,status_changed_at:"
+msgid "Status Since"
+msgstr "Estat des de"
+
+msgctxt "field:videovigilance.camera,status_checked_at:"
+msgid "Last Check"
+msgstr "Darrera comprovació"
+
+msgctxt "field:videovigilance.camera,status_detail:"
+msgid "Status Detail"
+msgstr "Detall de l'estat"
+
+msgctxt "field:videovigilance.camera,stream_path:"
+msgid "Main Stream"
+msgstr "Flux principal"
+
+msgctxt "field:videovigilance.camera,username:"
+msgid "Camera User"
+msgstr "Usuari de la càmera"
+
+msgctxt "field:videovigilance.configuration,alarm_armed:"
+msgid "Alarm Armed"
+msgstr "Alarma activada"
+
+msgctxt "field:videovigilance.configuration,alarm_changed_at:"
+msgid "Last Change"
+msgstr "Darrer canvi"
+
+msgctxt "field:videovigilance.configuration,alarm_changed_by:"
+msgid "Changed By"
+msgstr "Canviat per"
+
+msgctxt "field:videovigilance.configuration,call_cooldown:"
+msgid "Wait Between Calls (s)"
+msgstr "Espera entre trucades (s)"
+
+msgctxt "field:videovigilance.configuration,call_voice:"
+msgid "Read the Alarm Aloud"
+msgstr "Llegir l'alarma per veu"
+
+msgctxt "field:videovigilance.configuration,call_voice_name:"
+msgid "Voice"
+msgstr "Veu"
+
+msgctxt "field:videovigilance.configuration,camera_heartbeat_failures:"
+msgid "Failed Checks Before Alerting"
+msgstr "Comprovacions fallides per avisar"
+
+msgctxt "field:videovigilance.configuration,camera_heartbeat_interval:"
+msgid "Camera Heartbeat Interval (s)"
+msgstr "Interval del batec de càmeres (s)"
+
+msgctxt "field:videovigilance.configuration,ptz_quiet_seconds:"
+msgid "Notice Silence When the Camera Moves (s)"
+msgstr "Silenci d'avisos en moure la càmera (s)"
+
+msgctxt "field:videovigilance.configuration,service_heartbeat_interval:"
+msgid "Service Heartbeat Interval (s)"
+msgstr "Interval del batec del servei (s)"
+
+msgctxt "field:videovigilance.configuration,service_heartbeat_misses:"
+msgid "Missed Heartbeats Before Alerting"
+msgstr "Batecs perduts per avisar"
+
+msgctxt "field:videovigilance.configuration,service_last_seen:"
+msgid "Last Service Heartbeat"
+msgstr "Darrer batec del servei"
+
+msgctxt "field:videovigilance.configuration,service_status:"
+msgid "Service Status"
+msgstr "Estat del servei"
+
+msgctxt "field:videovigilance.configuration,watchdog_checked_at:"
+msgid "Last Review"
+msgstr "Darrera revisió"
+
+msgctxt "field:videovigilance.configuration,watchdog_grace_from:"
+msgid "Grace From"
+msgstr "Marge des de"
+
+msgctxt "field:videovigilance.configuration,yeastar_caller:"
+msgid "Caller Number"
+msgstr "Número d'origen"
+
+msgctxt "field:videovigilance.configuration,yeastar_dial_permission:"
+msgid "Extension with Dial Permission"
+msgstr "Extensió amb permís de trucada"
+
+msgctxt "field:videovigilance.configuration,yeastar_pbx:"
+msgid "Yeastar PBX"
+msgstr "Centraleta Yeastar"
+
+msgctxt "field:videovigilance.event,camera:"
+msgid "Camera"
+msgstr "Càmera"
+
+msgctxt "field:videovigilance.event,directions:"
+msgid "Directions"
+msgstr "Direccions"
+
+msgctxt "field:videovigilance.event,end_frame:"
+msgid "End Image"
+msgstr "Imatge final"
+
+msgctxt "field:videovigilance.event,end_frame_id:"
+msgid "End File ID"
+msgstr "ID del fitxer final"
+
+msgctxt "field:videovigilance.event,ended_at:"
+msgid "End"
+msgstr "Final"
+
+msgctxt "field:videovigilance.event,last_command_at:"
+msgid "Last Command"
+msgstr "Darrera ordre"
+
+msgctxt "field:videovigilance.event,max_confidence:"
+msgid "Maximum Confidence"
+msgstr "Confiança màxima"
+
+msgctxt "field:videovigilance.event,max_persons:"
+msgid "Maximum Persons"
+msgstr "Màxim de persones"
+
+msgctxt "field:videovigilance.event,snapshot:"
+msgid "Snapshot"
+msgstr "Captura"
+
+msgctxt "field:videovigilance.event,snapshot_id:"
+msgid "File ID"
+msgstr "ID del fitxer"
+
+msgctxt "field:videovigilance.event,start_frame:"
+msgid "Start Image"
+msgstr "Imatge d'inici"
+
+msgctxt "field:videovigilance.event,start_frame_id:"
+msgid "Start File ID"
+msgstr "ID del fitxer d'inici"
+
+msgctxt "field:videovigilance.event,started_at:"
+msgid "Start"
+msgstr "Inici"
+
+msgctxt "field:videovigilance.event,type:"
+msgid "Type"
+msgstr "Tipus"
+
+msgctxt "field:videovigilance.event,uid:"
+msgid "Identifier"
+msgstr "Identificador"
+
+msgctxt "field:videovigilance.event,user:"
+msgid "User"
+msgstr "Usuari"
+
+msgctxt "field:videovigilance.location,address:"
+msgid "Address"
+msgstr "Adreça"
+
+msgctxt "field:videovigilance.location,cameras:"
+msgid "Cameras"
+msgstr "Càmeres"
+
+msgctxt "field:videovigilance.location,managers:"
+msgid "Managers"
+msgstr "Encarregats"
+
+msgctxt "field:videovigilance.location,name:"
+msgid "Name"
+msgstr "Nom"
+
+msgctxt "field:videovigilance.location,notes:"
+msgid "Notes"
+msgstr "Observacions"
+
+msgctxt "field:videovigilance.location.manager,location:"
+msgid "Location"
+msgstr "Ubicació"
+
+msgctxt "field:videovigilance.location.manager,party:"
+msgid "Manager"
+msgstr "Encarregat"
+
+msgctxt "field:videovigilance.location.manager,phone:"
+msgid "Phone"
+msgstr "Telèfon"
+
+msgctxt "field:videovigilance.location.manager,sequence:"
+msgid "Sequence"
+msgstr "Seqüència"
+
+msgctxt "field:videovigilance.web.alarm_snapshot,alarm_id:"
+msgid "alarm_id"
+msgstr ""
+
+msgctxt "field:videovigilance.web.alarm_switch,armed:"
+msgid "armed"
+msgstr ""
+
+msgctxt "field:videovigilance.web.alarm_switch,csrf:"
+msgid "csrf"
+msgstr ""
+
+msgctxt "field:videovigilance.web.camera_alarms,camera_id:"
+msgid "camera_id"
+msgstr ""
+
+msgctxt "field:videovigilance.web.dashboard,highlight:"
+msgid "highlight"
+msgstr ""
+
+msgctxt "field:videovigilance.web.detection_snapshot,event_id:"
+msgid "event_id"
+msgstr ""
+
+msgctxt "field:videovigilance.web.error,status:"
+msgid "Status"
+msgstr "Estat"
+
+msgctxt "field:videovigilance.web.layout,title:"
+msgid "Title"
+msgstr "Títol"
+
+msgctxt "field:videovigilance.web.live,code:"
+msgid "code"
+msgstr ""
+
+msgctxt "field:videovigilance.web.live_frame,code:"
+msgid "code"
+msgstr ""
+
+msgctxt "field:videovigilance.web.live_move,code:"
+msgid "code"
+msgstr ""
+
+msgctxt "field:videovigilance.web.live_move,csrf:"
+msgid "csrf"
+msgstr ""
+
+msgctxt "field:videovigilance.web.live_move,dx:"
+msgid "dx"
+msgstr ""
+
+msgctxt "field:videovigilance.web.live_move,dy:"
+msgid "dy"
+msgstr ""
+
+msgctxt "field:videovigilance.web.live_move,speed:"
+msgid "speed"
+msgstr ""
+
+msgctxt "field:videovigilance.web.live_stop,code:"
+msgid "code"
+msgstr ""
+
+msgctxt "field:videovigilance.web.live_stop,csrf:"
+msgid "csrf"
+msgstr ""
+
+msgctxt "field:videovigilance.web.login,csrf:"
+msgid "csrf"
+msgstr ""
+
+msgctxt "field:videovigilance.web.login,login:"
+msgid "login"
+msgstr ""
+
+msgctxt "field:videovigilance.web.login,password:"
+msgid "password"
+msgstr ""
+
+msgctxt "field:videovigilance.web.login_form,error:"
+msgid "error"
+msgstr ""
+
+msgctxt "field:videovigilance.web.logout,csrf:"
+msgid "csrf"
+msgstr ""
+
+msgctxt "field:videovigilance.web.message_item,highlight:"
+msgid "highlight"
+msgstr ""
+
+msgctxt "field:videovigilance.web.message_item,message:"
+msgid "message"
+msgstr ""
+
+msgctxt "field:videovigilance.web.message_read,csrf:"
+msgid "csrf"
+msgstr ""
+
+msgctxt "field:videovigilance.web.message_read,message_id:"
+msgid "message_id"
+msgstr ""
+
+msgctxt "field:videovigilance.web.messages,highlight:"
+msgid "highlight"
+msgstr ""
+
+msgctxt "field:videovigilance.web.movement_frame,movement_id:"
+msgid "movement_id"
+msgstr ""
+
+msgctxt "field:videovigilance.web.movement_frame,which:"
+msgid "which"
+msgstr ""
+
+msgctxt "field:videovigilance.web.notification,message_id:"
+msgid "message_id"
+msgstr ""
+
+msgctxt "field:videovigilance.web.push_subscribe,auth:"
+msgid "auth"
+msgstr ""
+
+msgctxt "field:videovigilance.web.push_subscribe,csrf:"
+msgid "csrf"
+msgstr ""
+
+msgctxt "field:videovigilance.web.push_subscribe,endpoint:"
+msgid "endpoint"
+msgstr ""
+
+msgctxt "field:videovigilance.web.push_subscribe,p256dh:"
+msgid "p256dh"
+msgstr ""
+
+msgctxt "field:videovigilance.web.push_test,csrf:"
+msgid "csrf"
+msgstr ""
+
+msgctxt "field:videovigilance.web.push_unsubscribe,csrf:"
+msgid "csrf"
+msgstr ""
+
+msgctxt "field:videovigilance.web.push_unsubscribe,endpoint:"
+msgid "endpoint"
+msgstr ""
+
+msgctxt "help:res.user,web_user:"
+msgid "Recipient of this user's video surveillance notices."
+msgstr "Destinatari dels avisos de videovigilància d'aquest usuari."
+
+msgctxt "help:videovigilance.alarm,camera:"
+msgid "Empty for alarms that do not belong to a specific camera."
+msgstr "Buida en les alarmes que no són d'una càmera concreta."
+
+msgctxt "help:videovigilance.alarm,event:"
+msgid "Detection that triggered the alarm."
+msgstr "Detecció que ha provocat l'alarma."
+
+msgctxt "help:videovigilance.alarm,frame:"
+msgid ""
+"Last image of the camera when the notice of an outage or recovery was "
+"raised."
+msgstr ""
+"Darrera imatge de la càmera quan va saltar l'avís d'una caiguda o "
+"recuperació."
+
+msgctxt "help:videovigilance.alarm.call,state:"
+msgid ""
+"'Started' means the PBX accepted the order to call, not that the manager "
+"answered."
+msgstr ""
+"«Iniciada» vol dir que la centraleta ha acceptat la ordre de trucar, no que "
+"l'encarregat hagi respost."
+
+msgctxt "help:videovigilance.alarm.call,voice:"
+msgid "The PBX read the alarm to the manager. If not, the phone only rang."
+msgstr ""
+"La centraleta ha llegit l'alarma a l'encarregat. Si no, només ha sonat."
+
+msgctxt "help:videovigilance.alarm.call,voice_error:"
+msgid "Why the alarm was not read. The call was made anyway."
+msgstr "Per què no s'ha llegit l'alarma. La trucada s'ha fet igualment."
+
+msgctxt "help:videovigilance.camera,code:"
+msgid "Unique and stable identifier of the camera."
+msgstr "Identificador únic i estable de la càmera."
+
+msgctxt "help:videovigilance.camera,detect_motion:"
+msgid ""
+"Creates an event when a person moves in the image. A person standing still "
+"does not create one."
+msgstr ""
+"Genera un esdeveniment quan una persona es mou a la imatge. Una persona "
+"quieta no en genera."
+
+msgctxt "help:videovigilance.camera,detect_persons:"
+msgid "Creates an event when there is a person in the image, moving or not."
+msgstr ""
+"Genera un esdeveniment quan hi ha una persona a la imatge, es mogui o no."
+
+msgctxt "help:videovigilance.camera,firmware_version:"
+msgid "Reported by the camera over ONVIF, through the detection service."
+msgstr "La informa la càmera per ONVIF, a través del servei de detecció."
+
+msgctxt "help:videovigilance.camera,frame:"
+msgid ""
+"Last image the detection service sent with the heartbeat. It is kept even if"
+" the camera goes down. It is stored in the table and not in the file store: "
+"it changes at every heartbeat."
+msgstr ""
+"Darrera imatge que el servei de detecció ha enviat amb el batec. Es conserva"
+" encara que la càmera caigui. Es desa a la taula i no al magatzem de "
+"fitxers: es canvia a cada batec."
+
+msgctxt "help:videovigilance.camera,host:"
+msgid "IP address or DNS name, without protocol, port or credentials."
+msgstr "Adreça IP o nom DNS, sense protocol, port ni credencials."
+
+msgctxt "help:videovigilance.camera,location:"
+msgid ""
+"Where the camera is. The managers of the location are the ones called when a"
+" person alarm goes off."
+msgstr ""
+"On és la càmera. Els encarregats de la ubicació són a qui es truca quan "
+"salta una alarma de persona."
+
+msgctxt "help:videovigilance.camera,password:"
+msgid ""
+"Password of the camera. It is stored encrypted and cannot be read back; "
+"leave it as it is to keep it."
+msgstr ""
+"Contrasenya de la càmera. Es desa xifrada i no es pot tornar a consultar; "
+"deixeu-la com està per conservar-la."
+
+msgctxt "help:videovigilance.camera,ptz_moved_at:"
+msgid ""
+"When the last movement of the camera was ordered from the web. For a few "
+"seconds no notices of events of this camera are sent, because when it moves "
+"the whole scene shifts and looks like motion."
+msgstr ""
+"Quan es va ordenar l'últim moviment de la càmera des de la web. Durant uns "
+"segons no s'envien avisos d'esdeveniments d'aquesta càmera, perquè en "
+"moure's tota l'escena es desplaça i sembla moviment."
+
+msgctxt "help:videovigilance.camera,rotation:"
+msgid ""
+"Rotation to apply to the image so that people appear upright (e.g. 180° if "
+"the camera is mounted upside down)."
+msgstr ""
+"Rotació que cal aplicar a la imatge perquè les persones surtin dretes (p. "
+"ex. 180° si la càmera està muntada al revés)."
+
+msgctxt "help:videovigilance.camera,secondary_stream_path:"
+msgid "Optional relative RTSP path, for example stream2."
+msgstr "Ruta RTSP relativa opcional, per exemple stream2."
+
+msgctxt "help:videovigilance.camera,status:"
+msgid ""
+"Status of the camera according to the detection service (camera heartbeat). "
+"It stays until the next heartbeat."
+msgstr ""
+"Estat de la càmera segons el servei de detecció (batec de càmeres). Es manté"
+" fins al següent batec."
+
+msgctxt "help:videovigilance.camera,stream_path:"
+msgid "Relative RTSP path, for example stream1. Without credentials."
+msgstr "Ruta RTSP relativa, per exemple stream1. Sense credencials."
+
+msgctxt "help:videovigilance.configuration,alarm_armed:"
+msgid "If disabled, events are recorded anyway but no notice is sent."
+msgstr ""
+"Si està desactivada, els esdeveniments es registren igualment però no "
+"s'envia cap avís."
+
+msgctxt "help:videovigilance.configuration,call_cooldown:"
+msgid ""
+"After calling the managers of a location they are not called again until "
+"this time has passed (failed calls do not count). 0 to call at every alarm."
+msgstr ""
+"Després de trucar als encarregats d'una ubicació no es torna a trucar fins "
+"que passi aquest temps (les trucades fallides no compten). 0 per trucar a "
+"cada alarma."
+
+msgctxt "help:videovigilance.configuration,call_voice:"
+msgid ""
+"The PBX calls the manager and reads the alarm (location, camera, time and "
+"persons), generated with Google Text-to-Speech. If the voice cannot be "
+"generated or played, the call is made anyway (it only rings)."
+msgstr ""
+"La centraleta truca a l'encarregat i li llegeix l'alarma (ubicació, càmera, "
+"hora i persones), generada amb Google Text-to-Speech. Si la veu no es pot "
+"generar o reproduir, es truca igualment (només sona)."
+
+msgctxt "help:videovigilance.configuration,call_voice_name:"
+msgid ""
+"Name of the Google Text-to-Speech voice, e.g. es-ES-Standard-A; the language"
+" comes from the name. GOOGLE_APPLICATION_CREDENTIALS is required in the "
+"trytond environment."
+msgstr ""
+"Nom de la veu de Google Text-to-Speech, p. ex. es-ES-Standard-A; l'idioma "
+"surt del nom. Cal GOOGLE_APPLICATION_CREDENTIALS a l'entorn de trytond."
+
+msgctxt "help:videovigilance.configuration,camera_heartbeat_failures:"
+msgid ""
+"Consecutive failed checks before a camera is considered down and an alert is"
+" raised. Avoids false alerts caused by brief outages."
+msgstr ""
+"Comprovacions consecutives fallides abans de donar una càmera per caiguda i "
+"avisar. Evita falsos avisos per talls puntuals."
+
+msgctxt "help:videovigilance.configuration,camera_heartbeat_interval:"
+msgid ""
+"Every how many seconds the service checks that each camera responds and "
+"delivers video."
+msgstr ""
+"Cada quants segons el servei comprova que cada càmera respon i entrega "
+"vídeo."
+
+msgctxt "help:videovigilance.configuration,ptz_quiet_seconds:"
+msgid ""
+"Seconds during which no notices of events of a camera are sent after it has "
+"been moved from the web: when it moves, the whole scene shifts and the "
+"detector takes it for motion. Events are recorded anyway. 0 to never "
+"silence."
+msgstr ""
+"Segons durant els quals no s'envien avisos d'esdeveniments d'una càmera "
+"després d'haver-la mogut des de la web: en moure's, tota l'escena es "
+"desplaça i el detector ho pren per moviment. Els esdeveniments es registren "
+"igualment. 0 per no silenciar mai."
+
+msgctxt "help:videovigilance.configuration,service_heartbeat_interval:"
+msgid "Every how many seconds the detection service communicates with Tryton."
+msgstr "Cada quants segons el servei de detecció es comunica amb Tryton."
+
+msgctxt "help:videovigilance.configuration,service_heartbeat_misses:"
+msgid ""
+"Missed heartbeats, in addition to the one that is due, before warning that "
+"the service does not respond: the service is considered down once the "
+"interval times (heartbeats + 1) has passed. It is checked at every interval."
+msgstr ""
+"Batecs perduts, a més del que ja toca, abans d'avisar que el servei no "
+"respon: es dona el servei per caigut passat l'interval per (batecs + 1). Es "
+"revisa a cada interval."
+
+msgctxt "help:videovigilance.configuration,yeastar_caller:"
+msgid ""
+"Number of the PBX the calls are made from: an extension, an IVR, a ring "
+"group or a queue. If it is an extension, that extension rings first."
+msgstr ""
+"Número de la centraleta des del qual es truca: una extensió, una IVR, un "
+"grup de timbre o una cua. Si és una extensió, sonarà primer aquesta "
+"extensió."
+
+msgctxt "help:videovigilance.configuration,yeastar_dial_permission:"
+msgid ""
+"Extension of the PBX that has permission for external calls: the PBX uses it"
+" to call the managers when the alarm is read."
+msgstr ""
+"Extensió de la centraleta que té permís de trucades externes: la centraleta "
+"l'usa per trucar als encarregats quan es llegeix l'alarma."
+
+msgctxt "help:videovigilance.configuration,yeastar_pbx:"
+msgid ""
+"PBX that makes the calls to the managers. Without a PBX nobody is called."
+msgstr ""
+"Centraleta que fa les trucades als encarregats. Sense centraleta no es truca"
+" a ningú."
+
+msgctxt "help:videovigilance.event,directions:"
+msgid "Where the camera moved to, in the order it happened."
+msgstr "Cap a on s'ha mogut la càmera, en l'ordre en què s'ha fet."
+
+msgctxt "help:videovigilance.event,ended_at:"
+msgid "Empty while the camera is still moving."
+msgstr "Buit mentre la càmera encara es mou."
+
+msgctxt "help:videovigilance.event,start_frame:"
+msgid ""
+"Image just before it started to move (only if someone was watching the live "
+"video)."
+msgstr ""
+"Imatge just abans de començar a moure's (només si algú mirava el vídeo en "
+"directe)."
+
+msgctxt "help:videovigilance.event,uid:"
+msgid ""
+"Unique identifier generated by the detection service; avoids duplicates on "
+"retries."
+msgstr ""
+"Identificador únic generat pel servei de detecció; evita duplicats en els "
+"reintents."
+
+msgctxt "help:videovigilance.event,user:"
+msgid "Who moved the camera."
+msgstr "Qui ha mogut la càmera."
+
+msgctxt "help:videovigilance.location,managers:"
+msgid ""
+"People called when a person alarm goes off on a camera of this location. "
+"They are all called at once."
+msgstr ""
+"Persones a qui es truca quan salta una alarma de persona en una càmera "
+"d'aquesta ubicació. Es truca a tots alhora."
+
+msgctxt "help:videovigilance.location.manager,phone:"
+msgid "Number to call. Digits only (the + becomes 00)."
+msgstr "Número al qual es truca. Només xifres (el + es converteix en 00)."
+
+msgctxt "model:ir.action,name:act_alarm"
+msgid "Alarms"
+msgstr "Alarmes"
+
+msgctxt "model:ir.action,name:act_camera"
+msgid "Cameras"
+msgstr "Càmeres"
+
+msgctxt "model:ir.action,name:act_camera_alarms_url"
+msgid "Camera Notices"
+msgstr "Avisos de la càmera"
+
+msgctxt "model:ir.action,name:act_configuration"
+msgid "Configuration"
+msgstr "Configuració"
+
+msgctxt "model:ir.action,name:act_event"
+msgid "Events"
+msgstr "Esdeveniments"
+
+msgctxt "model:ir.action,name:act_location"
+msgid "Locations"
+msgstr "Ubicacions"
+
+msgctxt "model:ir.action,name:wizard_camera_open_alarms"
+msgid "Camera Notices"
+msgstr "Avisos de la càmera"
+
+msgctxt "model:ir.action.act_window.domain,name:act_alarm_domain_all"
+msgid "All"
+msgstr "Totes"
+
+msgctxt "model:ir.action.act_window.domain,name:act_alarm_domain_pending"
+msgid "Pending"
+msgstr "Pendents"
+
+msgctxt "model:ir.action.act_window.domain,name:act_event_domain_all"
+msgid "All"
+msgstr "Tots"
+
+msgctxt "model:ir.action.act_window.domain,name:act_event_domain_movement"
+msgid "Camera Movements"
+msgstr "Moviments de càmera"
+
+msgctxt "model:ir.action.act_window.domain,name:act_event_domain_person"
+msgid "Person Motion"
+msgstr "Moviment de persones"
+
+msgctxt "model:ir.action.act_window.domain,name:act_event_domain_presence"
+msgid "Person Detection"
+msgstr "Detecció de persones"
+
+msgctxt "model:ir.message,text:msg_camera_code_unique"
+msgid "The camera code must be unique."
+msgstr "El codi de la càmera ha de ser únic."
+
+msgctxt "model:ir.message,text:msg_camera_detection_required"
+msgid ""
+"The camera must have person detection, motion detection or both enabled."
+msgstr ""
+"La càmera ha de tenir activada la detecció de persones, la de moviment o "
+"totes dues."
+
+msgctxt "model:ir.message,text:msg_event_period_invalid"
+msgid "The end of the event cannot be earlier than its start."
+msgstr "El final de l'esdeveniment no pot ser anterior a l'inici."
+
+msgctxt "model:ir.message,text:msg_event_uid_unique"
+msgid "The identifier of the event must be unique."
+msgstr "L'identificador de l'esdeveniment ha de ser únic."
+
+#, python-format
+msgctxt "model:ir.message,text:msg_manager_number_invalid"
+msgid ""
+"The phone \"%(number)s\" of %(party)s cannot be dialed: it must have digits "
+"only (the + becomes 00)."
+msgstr ""
+"El telèfon «%(number)s» de %(party)s no es pot marcar: ha de tenir només "
+"xifres (el + es converteix en 00)."
+
+#, python-format
+msgctxt "model:ir.message,text:msg_play_prompt_failed"
+msgid "The Yeastar PBX \"%(pbx)s\" could not play the audio: %(errmsg)s"
+msgstr ""
+"La centraleta Yeastar «%(pbx)s» no ha pogut reproduir l'àudio: %(errmsg)s"
+
+#, python-format
+msgctxt "model:ir.message,text:msg_prompt_upload_failed"
+msgid "The audio could not be uploaded to the Yeastar PBX \"%(pbx)s\": %(errmsg)s"
+msgstr ""
+"No s'ha pogut pujar l'àudio a la centraleta Yeastar «%(pbx)s»: %(errmsg)s"
+
+msgctxt "model:ir.message,text:msg_secret_key_invalid"
+msgid ""
+"The encryption key secret_key of trytond.conf is not valid (a Fernet key is "
+"required)."
+msgstr ""
+"La clau de xifratge secret_key de trytond.conf no és vàlida (cal una clau "
+"Fernet)."
+
+msgctxt "model:ir.message,text:msg_secret_key_mismatch"
+msgid ""
+"The password cannot be decrypted: the key secret_key is not the one used to "
+"store it."
+msgstr ""
+"No es pot desxifrar la contrasenya: la clau secret_key no és la que es va "
+"usar per desar-la."
+
+msgctxt "model:ir.message,text:msg_secret_key_missing"
+msgid ""
+"The encryption key is missing: define secret_key in the [videovigilance] "
+"section of trytond.conf."
+msgstr ""
+"Falta la clau de xifratge: definiu secret_key a la secció [videovigilance] "
+"de trytond.conf."
+
+msgctxt "model:ir.message,text:msg_web_not_configured"
+msgid ""
+"No video surveillance web application is configured: the notices page cannot"
+" be opened."
+msgstr ""
+"No hi ha cap aplicació web de videovigilància configurada: no es pot obrir "
+"la pàgina d'avisos."
+
+msgctxt "model:ir.model.button,string:alarm_mark_seen_button"
+msgid "Mark as Seen"
+msgstr "Marcar com a vista"
+
+msgctxt "model:ir.model.button,string:camera_open_alarms_button"
+msgid "Notices"
+msgstr "Avisos"
+
+msgctxt "model:ir.ui.menu,name:menu_alarm"
+msgid "Alarms"
+msgstr "Alarmes"
+
+msgctxt "model:ir.ui.menu,name:menu_camera"
+msgid "Cameras"
+msgstr "Càmeres"
+
+msgctxt "model:ir.ui.menu,name:menu_configuration"
+msgid "Configuration"
+msgstr "Configuració"
+
+msgctxt "model:ir.ui.menu,name:menu_event"
+msgid "Events"
+msgstr "Esdeveniments"
+
+msgctxt "model:ir.ui.menu,name:menu_location"
+msgid "Locations"
+msgstr "Ubicacions"
+
+msgctxt "model:ir.ui.menu,name:menu_videovigilance"
+msgid "Video Surveillance"
+msgstr "Videovigilància"
+
+msgctxt "model:res.group,name:group_admin"
+msgid "Video Surveillance: Administration"
+msgstr "Videovigilància: administració"
+
+msgctxt "model:res.group,name:group_reader"
+msgid "Video Surveillance: Read"
+msgstr "Videovigilància: consulta"
+
+msgctxt "model:videovigilance.alarm,string:"
+msgid "Videovigilance Alarm"
+msgstr ""
+
+msgctxt "model:videovigilance.alarm.call,string:"
+msgid "Videovigilance Alarm Call"
+msgstr ""
+
+msgctxt "model:videovigilance.camera,string:"
+msgid "Videovigilance Camera"
+msgstr ""
+
+msgctxt "model:videovigilance.configuration,string:"
+msgid "Videovigilance Configuration"
+msgstr ""
+
+msgctxt "model:videovigilance.event,string:"
+msgid "Videovigilance Event"
+msgstr ""
+
+msgctxt "model:videovigilance.location,string:"
+msgid "Videovigilance Location"
+msgstr ""
+
+msgctxt "model:videovigilance.location.manager,string:"
+msgid "Videovigilance Location Manager"
+msgstr ""
+
+msgctxt "model:videovigilance.web.alarm_card,string:"
+msgid "Videovigilance Web Alarm Card"
+msgstr ""
+
+msgctxt "model:videovigilance.web.alarm_snapshot,string:"
+msgid "Videovigilance Web Alarm Snapshot"
+msgstr ""
+
+msgctxt "model:videovigilance.web.alarm_switch,string:"
+msgid "Videovigilance Web Alarm Switch"
+msgstr ""
+
+msgctxt "model:videovigilance.web.camera_alarms,string:"
+msgid "Videovigilance Web Camera Alarms"
+msgstr ""
+
+msgctxt "model:videovigilance.web.dashboard,string:"
+msgid "Videovigilance Web Dashboard"
+msgstr ""
+
+msgctxt "model:videovigilance.web.detection_snapshot,string:"
+msgid "Videovigilance Web Detection Snapshot"
+msgstr ""
+
+msgctxt "model:videovigilance.web.device_card,string:"
+msgid "Videovigilance Web Device Card"
+msgstr ""
+
+msgctxt "model:videovigilance.web.error,string:"
+msgid "Videovigilance Web Error"
+msgstr ""
+
+msgctxt "model:videovigilance.web.events,string:"
+msgid "Videovigilance Web Events"
+msgstr ""
+
+msgctxt "model:videovigilance.web.index,string:"
+msgid "Videovigilance Web Index"
+msgstr ""
+
+msgctxt "model:videovigilance.web.layout,string:"
+msgid "Videovigilance Web Layout"
+msgstr ""
+
+msgctxt "model:videovigilance.web.live,string:"
+msgid "Videovigilance Web Live"
+msgstr ""
+
+msgctxt "model:videovigilance.web.live_frame,string:"
+msgid "Videovigilance Web Live Frame"
+msgstr ""
+
+msgctxt "model:videovigilance.web.live_move,string:"
+msgid "Videovigilance Web Live Move"
+msgstr ""
+
+msgctxt "model:videovigilance.web.live_stop,string:"
+msgid "Videovigilance Web Live Stop"
+msgstr ""
+
+msgctxt "model:videovigilance.web.login,string:"
+msgid "Videovigilance Web Login"
+msgstr ""
+
+msgctxt "model:videovigilance.web.login_form,string:"
+msgid "Videovigilance Web Login Form"
+msgstr ""
+
+msgctxt "model:videovigilance.web.logout,string:"
+msgid "Videovigilance Web Logout"
+msgstr ""
+
+msgctxt "model:videovigilance.web.message_item,string:"
+msgid "Videovigilance Web Message Item"
+msgstr ""
+
+msgctxt "model:videovigilance.web.message_read,string:"
+msgid "Videovigilance Web Message Read"
+msgstr ""
+
+msgctxt "model:videovigilance.web.messages,string:"
+msgid "Videovigilance Web Messages"
+msgstr ""
+
+msgctxt "model:videovigilance.web.movement_frame,string:"
+msgid "Videovigilance Web Movement Frame"
+msgstr ""
+
+msgctxt "model:videovigilance.web.notification,string:"
+msgid "Videovigilance Web Notification"
+msgstr ""
+
+msgctxt "model:videovigilance.web.push_subscribe,string:"
+msgid "Videovigilance Web Push Subscribe"
+msgstr ""
+
+msgctxt "model:videovigilance.web.push_test,string:"
+msgid "Videovigilance Web Push Test"
+msgstr ""
+
+msgctxt "model:videovigilance.web.push_unsubscribe,string:"
+msgid "Videovigilance Web Push Unsubscribe"
+msgstr ""
+
+msgctxt "model:videovigilance.web.session_bar,string:"
+msgid "Videovigilance Web Session Bar"
+msgstr ""
+
+msgctxt "selection:ir.cron,method:"
+msgid "Watch the Video Surveillance Service Heartbeat"
+msgstr "Vigilar el batec del servei de videovigilància"
+
+msgctxt "selection:res.user.application,application:"
+msgid "Video Surveillance: Detection Service"
+msgstr "Videovigilància: servei de detecció"
+
+msgctxt "selection:videovigilance.alarm,state:"
+msgid "Pending"
+msgstr "Pendent"
+
+msgctxt "selection:videovigilance.alarm,state:"
+msgid "Seen"
+msgstr "Vista"
+
+msgctxt "selection:videovigilance.alarm,type:"
+msgid "Camera Offline"
+msgstr "Càmera sense connexió"
+
+msgctxt "selection:videovigilance.alarm,type:"
+msgid "Camera Recovered"
+msgstr "Càmera recuperada"
+
+msgctxt "selection:videovigilance.alarm,type:"
+msgid "Detection Service Recovered"
+msgstr "Servei de detecció recuperat"
+
+msgctxt "selection:videovigilance.alarm,type:"
+msgid "Detection Service Silent"
+msgstr "Servei de detecció sense senyal"
+
+msgctxt "selection:videovigilance.alarm,type:"
+msgid "Person Detection"
+msgstr "Detecció de persona"
+
+msgctxt "selection:videovigilance.alarm,type:"
+msgid "Person Motion"
+msgstr "Moviment de persona"
+
+msgctxt "selection:videovigilance.alarm.call,state:"
+msgid "Failed"
+msgstr "Fallida"
+
+msgctxt "selection:videovigilance.alarm.call,state:"
+msgid "Pending"
+msgstr "Pendent"
+
+msgctxt "selection:videovigilance.alarm.call,state:"
+msgid "Started"
+msgstr "Iniciada"
+
+msgctxt "selection:videovigilance.camera,rotation:"
+msgid "0°"
+msgstr "0°"
+
+msgctxt "selection:videovigilance.camera,rotation:"
+msgid "180°"
+msgstr "180°"
+
+msgctxt "selection:videovigilance.camera,rotation:"
+msgid "270°"
+msgstr "270°"
+
+msgctxt "selection:videovigilance.camera,rotation:"
+msgid "90°"
+msgstr "90°"
+
+msgctxt "selection:videovigilance.camera,status:"
+msgid "Offline"
+msgstr "Sense connexió"
+
+msgctxt "selection:videovigilance.camera,status:"
+msgid "Online"
+msgstr "En línia"
+
+msgctxt "selection:videovigilance.camera,status:"
+msgid "Unknown"
+msgstr "Desconegut"
+
+msgctxt "selection:videovigilance.configuration,service_status:"
+msgid "Offline"
+msgstr "Sense connexió"
+
+msgctxt "selection:videovigilance.configuration,service_status:"
+msgid "Online"
+msgstr "En línia"
+
+msgctxt "selection:videovigilance.configuration,service_status:"
+msgid "Unknown"
+msgstr "Desconegut"
+
+msgctxt "selection:videovigilance.event,type:"
+msgid "Camera Movement"
+msgstr "Moviment de càmera"
+
+msgctxt "selection:videovigilance.event,type:"
+msgid "Person Detection"
+msgstr "Detecció de persona"
+
+msgctxt "selection:videovigilance.event,type:"
+msgid "Person Motion"
+msgstr "Moviment de persona"
+
+msgctxt "selection:www.site,type:"
+msgid "Video Surveillance: Alarm and Notices"
+msgstr "Videovigilància: alarma i avisos"
+
+msgctxt "view:videovigilance.alarm.call:"
+msgid "Date"
+msgstr "Data"
+
+msgctxt "view:videovigilance.alarm.call:"
+msgid "Time"
+msgstr "Hora"
+
+msgctxt "view:videovigilance.alarm:"
+msgid "Date"
+msgstr "Data"
+
+msgctxt "view:videovigilance.alarm:"
+msgid "Mark as Seen"
+msgstr "Marcar com a vista"
+
+msgctxt "view:videovigilance.alarm:"
+msgid "Time"
+msgstr "Hora"
+
+msgctxt "view:videovigilance.camera:"
+msgid "Check Date"
+msgstr "Data de la comprovació"
+
+msgctxt "view:videovigilance.camera:"
+msgid "Check Time"
+msgstr "Hora de la comprovació"
+
+msgctxt "view:videovigilance.camera:"
+msgid "Connection"
+msgstr "Connexió"
+
+msgctxt "view:videovigilance.camera:"
+msgid "Notes"
+msgstr "Observacions"
+
+msgctxt "view:videovigilance.camera:"
+msgid "Notices"
+msgstr "Avisos"
+
+msgctxt "view:videovigilance.camera:"
+msgid "Status"
+msgstr "Estat"
+
+msgctxt "view:videovigilance.configuration:"
+msgid "Calls to Managers (Yeastar)"
+msgstr "Trucades als encarregats (Yeastar)"
+
+msgctxt "view:videovigilance.configuration:"
+msgid "Camera Heartbeat"
+msgstr "Batec de càmeres"
+
+msgctxt "view:videovigilance.configuration:"
+msgid "Camera Movement"
+msgstr "Moviment de la càmera"
+
+msgctxt "view:videovigilance.configuration:"
+msgid "Service Heartbeat"
+msgstr "Batec del servei"
+
+msgctxt "view:videovigilance.event:"
+msgid "End Time"
+msgstr "Hora final"
+
+msgctxt "view:videovigilance.event:"
+msgid "Start Date"
+msgstr "Data d'inici"
+
+msgctxt "view:videovigilance.event:"
+msgid "Start Time"
+msgstr "Hora d'inici"
+
+msgctxt "model:ir.action,name:act_web_url"
+msgid "Notices Web App"
+msgstr "Web d'avisos"
+
+msgctxt "model:ir.action,name:wizard_open_web"
+msgid "Notices Web App"
+msgstr "Web d'avisos"
+
+msgctxt "model:ir.ui.menu,name:menu_open_web"
+msgid "Notices Web App"
+msgstr "Web d'avisos"

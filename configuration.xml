@@ -7,7 +7,7 @@
             <field name="name">configuration_form</field>
         </record>
         <record model="ir.action.act_window" id="act_configuration">
-            <field name="name">Configuració</field>
+            <field name="name">Configuration</field>
             <field name="res_model">videovigilance.configuration</field>
         </record>
         <record model="ir.action.act_window.view" id="act_configuration_view1">
