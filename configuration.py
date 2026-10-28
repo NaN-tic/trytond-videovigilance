@@ -5,15 +5,13 @@ import logging
 import time
 from datetime import datetime, timedelta
 
-from trytond.config import config
 from trytond.model import ModelSingleton, ModelSQL, ModelView, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Bool, Eval
-from trytond.rpc import RPC
 from trytond.transaction import Transaction, without_check_access
 from trytond.worker import run_task
 
-from .camera import STATUSES, require_service
+from .camera import STATUSES
 
 logger = logging.getLogger(__name__)
 
@@ -31,82 +29,70 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
     __name__ = 'videovigilance.configuration'
 
     alarm_armed = fields.Boolean(
-        "Alarma activada",
-        help="Si està desactivada, els esdeveniments es registren igualment "
-        "però no s'envia cap avís.")
-    alarm_changed_at = fields.DateTime("Darrer canvi", readonly=True)
+        "Alarm Armed",
+        help="If disabled, events are recorded anyway but no notice is sent.")
+    alarm_changed_at = fields.DateTime("Last Change", readonly=True)
     alarm_changed_by = fields.Many2One(
-        'res.user', "Canviat per", readonly=True, ondelete='SET NULL')
+        'res.user', "Changed By", readonly=True, ondelete='SET NULL')
 
     camera_heartbeat_interval = fields.Integer(
-        "Interval del batec de càmeres (s)", required=True,
+        "Camera Heartbeat Interval (s)", required=True,
         domain=[('camera_heartbeat_interval', '>=', MIN_INTERVAL)],
-        help="Cada quants segons el servei comprova que cada càmera respon i "
-        "entrega vídeo.")
+        help="Every how many seconds the service checks that each camera responds and delivers "
+             "video.")
     camera_heartbeat_failures = fields.Integer(
-        "Comprovacions fallides per avisar", required=True,
+        "Failed Checks Before Alerting", required=True,
         domain=[('camera_heartbeat_failures', '>=', 1)],
-        help="Comprovacions consecutives fallides abans de donar una càmera per "
-        "caiguda i avisar. Evita falsos avisos per talls puntuals.")
+        help="Consecutive failed checks before a camera is considered down and an alert is "
+             "raised. Avoids false alerts caused by brief outages.")
     service_heartbeat_interval = fields.Integer(
-        "Interval del batec del servei (s)", required=True,
+        "Service Heartbeat Interval (s)", required=True,
         domain=[('service_heartbeat_interval', '>=', MIN_INTERVAL)],
-        help="Cada quants segons el servei de detecció es comunica amb Tryton.")
+        help="Every how many seconds the detection service communicates with Tryton.")
     service_heartbeat_misses = fields.Integer(
-        "Batecs perduts per avisar", required=True,
+        "Missed Heartbeats Before Alerting", required=True,
         domain=[('service_heartbeat_misses', '>=', 1)],
-        help="Batecs perduts, a més del que ja toca, abans d'avisar que el "
-        "servei no respon: es dona el servei per caigut passat l'interval per "
-        "(batecs + 1). Es revisa a cada interval.")
+        help="Missed heartbeats, in addition to the one that is due, before warning that the "
+             "service does not respond: the service is considered down once the interval times "
+             "(heartbeats + 1) has passed. It is checked at every interval.")
     service_status = fields.Selection(
-        STATUSES, "Estat del servei", required=True, readonly=True)
-    service_last_seen = fields.DateTime("Darrer batec del servei", readonly=True)
-    watchdog_checked_at = fields.DateTime("Darrera revisió", readonly=True)
-    watchdog_grace_from = fields.DateTime("Marge des de", readonly=True)
+        STATUSES, "Service Status", required=True, readonly=True)
+    service_last_seen = fields.DateTime("Last Service Heartbeat", readonly=True)
+    watchdog_checked_at = fields.DateTime("Last Review", readonly=True)
+    watchdog_grace_from = fields.DateTime("Grace From", readonly=True)
     ptz_quiet_seconds = fields.Integer(
-        "Silenci d'avisos en moure la càmera (s)", required=True,
+        "Notice Silence When the Camera Moves (s)", required=True,
         domain=[('ptz_quiet_seconds', '>=', 0)],
-        help="Segons durant els quals no s'envien avisos d'esdeveniments d'una "
-        "càmera després d'haver-la mogut des de la web: en moure's, tota "
-        "l'escena es desplaça i el detector ho pren per moviment. Els "
-        "esdeveniments es registren igualment. 0 per no silenciar mai.")
+        help="Seconds during which no notices of events of a camera are sent after it has been "
+             "moved from the web: when it moves, the whole scene shifts and the detector takes it "
+             "for motion. Events are recorded anyway. 0 to never silence.")
     yeastar_pbx = fields.Many2One(
-        'yeastar.pbx', "Centraleta Yeastar", ondelete='SET NULL',
-        help="Centraleta que fa les trucades als encarregats. Sense centraleta "
-        "no es truca a ningú.")
+        'yeastar.pbx', "Yeastar PBX", ondelete='SET NULL',
+        help="PBX that makes the calls to the managers. Without a PBX nobody is called.")
     yeastar_caller = fields.Char(
-        "Número d'origen",
+        "Caller Number",
         states={'required': Bool(Eval('yeastar_pbx'))},
-        help="Número de la centraleta des del qual es truca: una extensió, una "
-        "IVR, un grup de timbre o una cua. Si és una extensió, sonarà primer "
-        "aquesta extensió.")
+        help="Number of the PBX the calls are made from: an extension, an IVR, a ring group or a "
+             "queue. If it is an extension, that extension rings first.")
     call_cooldown = fields.Integer(
-        "Espera entre trucades (s)", required=True,
+        "Wait Between Calls (s)", required=True,
         domain=[('call_cooldown', '>=', 0)],
-        help="Després de trucar als encarregats d'una ubicació no es torna a "
-        "trucar fins que passi aquest temps (les trucades fallides no compten). "
-        "0 per trucar a cada alarma.")
+        help="After calling the managers of a location they are not called again until this time "
+             "has passed (failed calls do not count). 0 to call at every alarm.")
     call_voice = fields.Boolean(
-        "Llegir l'alarma per veu",
-        help="La centraleta truca a l'encarregat i li llegeix l'alarma (ubicació, "
-        "càmera, hora i persones), generada amb Google Text-to-Speech. Si la veu "
-        "no es pot generar o reproduir, es truca igualment (només sona).")
+        "Read the Alarm Aloud",
+        help="The PBX calls the manager and reads the alarm (location, camera, time and persons), "
+             "generated with Google Text-to-Speech. If the voice cannot be generated or played, "
+             "the call is made anyway (it only rings).")
     call_voice_name = fields.Char(
-        "Veu", states={'required': Bool(Eval('call_voice'))},
-        help="Nom de la veu de Google Text-to-Speech, p. ex. es-ES-Standard-A; "
-        "l'idioma surt del nom. Cal GOOGLE_APPLICATION_CREDENTIALS a l'entorn "
-        "de trytond.")
+        "Voice", states={'required': Bool(Eval('call_voice'))},
+        help="Name of the Google Text-to-Speech voice, e.g. es-ES-Standard-A; the language comes "
+             "from the name. GOOGLE_APPLICATION_CREDENTIALS is required in the trytond "
+             "environment.")
     yeastar_dial_permission = fields.Char(
-        "Extensió amb permís de trucada", states={'required': Bool(Eval('call_voice'))},
-        help="Extensió de la centraleta que té permís de trucades externes: la "
-        "centraleta l'usa per trucar als encarregats quan es llegeix l'alarma.")
-
-    @classmethod
-    def __setup__(cls):
-        super().__setup__()
-        # Writes to the database: this cannot be a read-only call.
-        cls.__rpc__['heartbeat'] = RPC(readonly=False)
-        cls.__rpc__['relay_token'] = RPC()
+        "Extension with Dial Permission", states={'required': Bool(Eval('call_voice'))},
+        help="Extension of the PBX that has permission for external calls: the PBX uses it to "
+             "call the managers when the alarm is read.")
 
     @staticmethod
     def default_alarm_armed():
@@ -196,7 +182,7 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
             logger.exception("No s'han pogut enviar els avisos de salut")
 
     @classmethod
-    def heartbeat(cls, cameras):
+    def service_heartbeat(cls, cameras):
         """Detection service heartbeat.
 
         Records that the service is alive, applies the reported camera statuses
@@ -204,7 +190,6 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
         intervals for the service to adopt without restarting.
         """
         from .push import local_time
-        require_service('videovigilance.msg_heartbeat_forbidden')
         Camera = Pool().get('videovigilance.camera')
         now = datetime.now()
         with without_check_access():
@@ -229,21 +214,6 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
                 }
         cls._send(notices)
         return reply
-
-    @classmethod
-    def relay_token(cls):
-        """Token for the live relay routes (frames and movement commands).
-
-        The service asks for it over the authenticated RPC channel and then presents it
-        on the relay routes, which check it without opening a database transaction.
-        """
-        from . import live
-        require_service('videovigilance.msg_relay_forbidden')
-        return {
-            'token': live.issue_token(
-                config.get('videovigilance', 'secret_key'), Transaction().database.name),
-            'expires_in': live.TOKEN_TTL_S,
-            }
 
     @classmethod
     def check_service(cls):
@@ -319,4 +289,4 @@ class Cron(metaclass=PoolMeta):
         super().__setup__()
         cls.method.selection.append((
                 'videovigilance.configuration|check_service',
-                "Vigilar el batec del servei de videovigilància"))
+                "Watch the Video Surveillance Service Heartbeat"))
