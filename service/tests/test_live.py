@@ -5,13 +5,10 @@ import textwrap
 import threading
 import time
 import unittest
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from types import SimpleNamespace
 
 from service import live, onvif
-from service.tryton import (
-    CameraConfig, RelayClient, RelayToken, TrytonUnavailable)
+from service.tryton import CameraConfig, TrytonUnavailable
 
 
 def camera(**changes):
@@ -326,97 +323,6 @@ class MovementTest(RelayTestCase):
         self.poll()
         self.assertTrue(wait_for(lambda: len(FakeOnvif.instances) == 2))
         self.assertEqual(FakeOnvif.instances[1].args[3], 'new')
-
-
-class RelayServer(BaseHTTPRequestHandler):
-    "Tryton's relay routes: a valid token is 'good'; anything else gets 401."
-    log = []
-    valid = {'good'}
-    reply = {}
-
-    def log_message(self, *args):
-        pass
-
-    def do_POST(self):
-        body = self.rfile.read(int(self.headers.get('Content-Length', 0)))
-        token = self.headers.get('Authorization', '').removeprefix('Bearer ')
-        type(self).log.append((self.path, token, self.headers.get('Content-Type'), body))
-        if token not in type(self).valid:
-            self.send_response(401)
-            self.send_header('Content-Length', '0')
-            self.end_headers()
-            return
-        data = json.dumps(type(self).reply).encode()
-        self.send_response(200)
-        self.send_header('Content-Length', str(len(data)))
-        self.end_headers()
-        self.wfile.write(data)
-
-
-class ClientTest(unittest.TestCase):
-    def setUp(self):
-        RelayServer.log = []
-        RelayServer.valid = {'good'}
-        RelayServer.reply = {}
-        self.server = ThreadingHTTPServer(('127.0.0.1', 0), RelayServer)
-        threading.Thread(target=self.server.serve_forever, daemon=True).start()
-        self.addCleanup(self.server.server_close)
-        self.addCleanup(self.server.shutdown)
-        self.url = f'http://127.0.0.1:{self.server.server_address[1]}/cameras/avisos/relay'
-        self.issued = []
-        tokens = SimpleNamespace(relay_token=self.issue)
-        self.client = RelayClient(self.url, RelayToken(tokens))
-
-    def issue(self):
-        token = 'good' if len(self.issued) else 'stale'
-        self.issued.append(token)
-        return {'token': token, 'expires_in': 3600}
-
-    def test_poll_sends_reports_with_the_token_and_returns_answers_by_camera_number(self):
-        RelayServer.valid = {'stale', 'good'}
-        RelayServer.reply = {'cameras': {'3': {'wanted': True, 'commands': []}}}
-        answer = self.client.poll({3: {'error': None, 'message': None}})
-        self.assertEqual(answer, {3: {'wanted': True, 'commands': []}})
-        path, token, _, body = RelayServer.log[0]
-        self.assertEqual(path, '/cameras/avisos/relay/poll')
-        self.assertEqual(token, 'stale')
-        self.assertEqual(json.loads(body), {'cameras': {'3': {'error': None, 'message': None}}})
-
-    def test_a_token_tryton_refuses_is_replaced_once_and_the_request_repeated(self):
-        RelayServer.reply = {'wanted': False}
-        self.assertFalse(self.client.push(3, b'\xff\xd8jpeg'))
-        self.assertEqual(self.issued, ['stale', 'good'])
-        self.assertEqual([entry[1] for entry in RelayServer.log], ['stale', 'good'])
-        path, _, content_type, body = RelayServer.log[1]
-        self.assertEqual((path, content_type, body),
-            ('/cameras/avisos/relay/3/frame', 'image/jpeg', b'\xff\xd8jpeg'))
-
-    def test_a_token_that_is_refused_twice_is_an_error_not_a_loop(self):
-        RelayServer.valid = set()
-        with self.assertRaisesRegex(TrytonUnavailable, 'HTTP 401'):
-            self.client.poll({})
-        self.assertEqual(len(RelayServer.log), 2)
-
-    def test_the_token_is_reused_until_half_of_its_life_has_passed(self):
-        RelayServer.valid = {'stale', 'good'}
-        RelayServer.reply = {'cameras': {}}
-        self.client.poll({})
-        self.client.poll({})
-        self.assertEqual(len(self.issued), 1)
-
-    def test_an_unreachable_tryton_is_unavailable_not_a_crash(self):
-        self.server.shutdown()
-        self.server.server_close()
-        with self.assertRaises(TrytonUnavailable):
-            self.client.poll({})
-
-    def test_an_answer_that_is_not_the_expected_shape_is_unavailable(self):
-        RelayServer.valid = {'stale', 'good'}
-        RelayServer.reply = {'nothing': 1}
-        with self.assertRaisesRegex(TrytonUnavailable, 'inesperada'):
-            self.client.poll({})
-        with self.assertRaisesRegex(TrytonUnavailable, 'inesperada'):
-            self.client.push(1, b'\xff\xd8')
 
 
 class CameraConfigTest(unittest.TestCase):

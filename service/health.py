@@ -78,6 +78,7 @@ class CameraHealth:
         self.online = None
         self.detail = ''
         self._failures = 0
+        self.camera_id = None  # the id Tryton gives the camera, where its frame is sent
         self.frame = None  # gives the camera's latest JPEG (or None)
         self.device = None  # what the camera said about itself over ONVIF
         self.device_due = 0.0  # when to ask it again
@@ -149,6 +150,7 @@ class CameraMonitor(Periodic):
             with self._lock:
                 state = self._states.setdefault(config.code, CameraHealth())
                 state.frame = frame
+                state.camera_id = config.id
                 before = state.online
                 state.record(ok, detail, self._settings.camera_failures)
                 after = state.online
@@ -188,11 +190,12 @@ class CameraMonitor(Periodic):
         camera carries its latest frame, taken now so that it is as fresh as the beat;
         a camera that told its brand and model carries them as `device`."""
         with self._lock:
-            decided = [(code, state.online, state.detail, state.frame, state.device)
+            decided = [(code, state.camera_id, state.online, state.detail, state.frame,
+                    state.device)
                 for code, state in self._states.items() if state.online is not None]
         reports = []
-        for code, online, detail, frame, device in decided:
-            report = {'code': code, 'online': online, 'detail': detail}
+        for code, camera_id, online, detail, frame, device in decided:
+            report = {'id': camera_id, 'code': code, 'online': online, 'detail': detail}
             jpeg = frame() if online else None
             if jpeg:
                 report['frame'] = jpeg
