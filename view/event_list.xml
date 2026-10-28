@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <tree>
-    <field name="started_at" widget="date" string="Start Date"/>
-    <field name="started_at" widget="time" string="Start Time"/>
-    <field name="ended_at" widget="time" string="End Time"/>
+    <field name="started_at" widget="date"/>
+    <field name="started_at" widget="time"/>
+    <field name="ended_at" widget="time"/>
     <field name="camera"/>
     <field name="type"/>
     <field name="directions"/>
