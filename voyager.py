@@ -209,7 +209,8 @@ def access_problem(user):
 
 def current_user():
     """Who is using the web app: the user of the Tryton session if it has access, else the
-    web account logged in with a password, else None. A web account only reads (is_admin)."""
+    web account logged in with a password, else None. A web account cannot administer
+    (is_admin is false): it only reads and manages its own devices and notices."""
     user = tryton_user()
     if user is not None and access_problem(user) is None:
         return user

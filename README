@@ -8,6 +8,14 @@ Installing
 
 See INSTALL
 
+Access
+------
+
+The module does not put any user in its groups, so after installing it nobody sees its menu
+or can use the web app until an administrator adds the users to *Videovigilància:
+administració* (everything, including the movement of the cameras and the alarm switch) or to
+*Videovigilància: consulta* (read only).
+
 
 License
 -------
