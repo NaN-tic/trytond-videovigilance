@@ -121,7 +121,7 @@ class LiveStream:
         self.key = (camera.live_url, camera.rotation)
         self.capture = Capture(camera.live_url, camera.rotation, fps, script)
         self._camera_id = camera.id
-        self._relay = relay  # a RelayClient used only by this stream's thread
+        self._relay = relay  # a TrytonClient used only by this stream's thread
         self._stop = threading.Event()
         self._thread = threading.Thread(
             target=self._push, name=f'live-{camera.code}', daemon=True)
@@ -233,7 +233,7 @@ class Ptz:
 class LiveRelay(Periodic):
     """Polls Tryton and does what it says: stream the watched cameras, move the ones told to.
 
-    `make_client()` returns a new RelayClient (they are not thread-safe).
+    `make_client()` returns a new TrytonClient (they are not thread-safe).
     """
 
     def __init__(self, make_client, fps, stop, script=CAPTURE, ptz_factory=onvif.OnvifCamera):

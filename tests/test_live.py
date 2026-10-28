@@ -3,7 +3,7 @@
 # the full copyright notices and license terms.
 """Tests for the live relay mailbox (no Tryton server, no camera needed).
 
-Run from the module folder:  python -m unittest discover -s tests -v
+Run from the module folder:  python -m unittest tests.test_live -v
 The module is loaded by path so the tests run against this source tree.
 """
 import importlib.util
@@ -14,6 +14,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent.parent
 
@@ -34,8 +35,8 @@ class MailboxTestCase(unittest.TestCase):
     def setUp(self):
         self.folder = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.folder, True)
+        self.addCleanup(setattr, live, 'DIR', live.DIR)
         live.DIR = self.folder
-        self.addCleanup(setattr, live, 'DIR', None)
         self.box = live.Mailbox('cameras')
 
     def age(self, path_part, seconds):
@@ -191,38 +192,22 @@ class CommandTest(MailboxTestCase):
         self.assertEqual(len(first.take(1)) + len(second.take(1)), 1)
 
 
-class TokenTest(unittest.TestCase):
-    def test_a_token_is_valid_for_its_database_until_it_expires(self):
-        token = live.issue_token('secret', 'cameras', now=1000)
-        self.assertTrue(live.check_token('secret', 'cameras', token, now=1000 + live.TOKEN_TTL_S - 1))
-        self.assertFalse(live.check_token('secret', 'cameras', token, now=1000 + live.TOKEN_TTL_S + 1))
-
-    def test_another_secret_or_database_or_tampering_is_refused(self):
-        token = live.issue_token('secret', 'cameras')
-        self.assertFalse(live.check_token('other', 'cameras', token))
-        self.assertFalse(live.check_token('secret', 'other', token))
-        expires, signature = token.split('.')
-        self.assertFalse(live.check_token('secret', 'cameras', f'{int(expires) + 99999}.{signature}'))
-
-    def test_garbage_is_refused_without_errors(self):
-        for token in (None, '', 'x', '123', 'abc.def', '.', '1.2.3'):
-            self.assertFalse(live.check_token('secret', 'cameras', token))
-
-
 class DirectoryTest(unittest.TestCase):
     def test_a_directory_others_can_read_is_refused(self):
         folder = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, folder, True)
         os.chmod(folder, 0o755)
+        self.addCleanup(setattr, live, 'DIR', live.DIR)
         live.DIR = folder
-        self.addCleanup(setattr, live, 'DIR', None)
         with self.assertRaisesRegex(RuntimeError, 'privado'):
             live.Mailbox('cameras').want(1)
 
     def test_the_default_directory_is_private(self):
-        live.DIR = None
-        folder = live._directory()
-        self.assertEqual(oct(folder.stat().st_mode & 0o777), '0o700')
+        with tempfile.TemporaryDirectory() as parent:
+            with patch.object(live, 'DIR', None), \
+                    patch.object(live.tempfile, 'gettempdir', return_value=parent):
+                folder = live._directory()
+                self.assertEqual(oct(folder.stat().st_mode & 0o777), '0o700')
 
 
 if __name__ == '__main__':
