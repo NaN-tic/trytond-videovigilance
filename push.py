@@ -107,8 +107,8 @@ class User(metaclass=PoolMeta):
     __name__ = 'res.user'
 
     web_user = fields.Many2One(
-        'web.user', "Usuari web", readonly=True, ondelete='SET NULL',
-        help="Destinatari dels avisos de videovigilància d'aquest usuari.")
+        'web.user', "Web User", readonly=True, ondelete='SET NULL',
+        help="Recipient of this user's video surveillance notices.")
 
 
 class Application(metaclass=PoolMeta):
@@ -128,7 +128,7 @@ class Message(metaclass=PoolMeta):
     __name__ = 'notification.web.message'
 
     event = fields.Many2One(
-        'videovigilance.event', "Esdeveniment", readonly=True,
+        'videovigilance.event', "Event", readonly=True,
         ondelete='SET NULL')
 
     def snapshot_path(self):

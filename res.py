@@ -14,4 +14,4 @@ class UserApplication(metaclass=PoolMeta):
     def __setup__(cls):
         super().__setup__()
         cls.application.selection.append(
-            (SERVICE_APPLICATION, "Videovigilància: servei de detecció"))
+            (SERVICE_APPLICATION, "Video Surveillance: Detection Service"))

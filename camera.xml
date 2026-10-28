@@ -2,12 +2,12 @@
 <tryton>
     <data>
         <record model="res.group" id="group_admin">
-            <field name="name">Videovigilància: administració</field>
+            <field name="name">Video Surveillance: Administration</field>
         </record>
         <record model="res.group" id="group_reader">
-            <field name="name">Videovigilància: consulta</field>
+            <field name="name">Video Surveillance: Read</field>
         </record>
-        <menuitem name="Videovigilància" id="menu_videovigilance" sequence="100" icon="tryton-folder"/>
+        <menuitem name="Video Surveillance" id="menu_videovigilance" sequence="100" icon="tryton-folder"/>
         <record model="ir.ui.menu-res.group" id="menu_main_group_admin">
             <field name="menu" ref="menu_videovigilance"/>
             <field name="group" ref="group_admin"/>
@@ -27,7 +27,7 @@
             <field name="name">camera_list</field>
         </record>
         <record model="ir.action.act_window" id="act_camera">
-            <field name="name">Càmeres</field>
+            <field name="name">Cameras</field>
             <field name="res_model">videovigilance.camera</field>
         </record>
         <record model="ir.action.act_window.view" id="act_camera_view1">
@@ -73,18 +73,18 @@
             <field name="perm_delete" eval="True"/>
         </record>
         <record model="ir.action.url" id="act_camera_alarms_url">
-            <field name="name">Avisos de la càmera</field>
+            <field name="name">Camera Notices</field>
             <!-- Replaced by the camera's own address in OpenAlarms.do_open -->
             <field name="url">about:blank</field>
         </record>
         <record model="ir.action.wizard" id="wizard_camera_open_alarms">
-            <field name="name">Avisos de la càmera</field>
+            <field name="name">Camera Notices</field>
             <field name="wiz_name">videovigilance.camera.open_alarms</field>
         </record>
         <record model="ir.model.button" id="camera_open_alarms_button">
             <field name="model">videovigilance.camera</field>
             <field name="name">open_alarms</field>
-            <field name="string">Avisos</field>
+            <field name="string">Notices</field>
         </record>
         <record model="ir.model.button-res.group" id="camera_open_alarms_button_group_admin">
             <field name="button" ref="camera_open_alarms_button"/>
@@ -111,7 +111,7 @@
             <field name="name">location_list</field>
         </record>
         <record model="ir.action.act_window" id="act_location">
-            <field name="name">Ubicacions</field>
+            <field name="name">Locations</field>
             <field name="res_model">videovigilance.location</field>
         </record>
         <record model="ir.action.act_window.view" id="act_location_view1">

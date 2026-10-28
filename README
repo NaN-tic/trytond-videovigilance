@@ -12,8 +12,14 @@ Detection service
 -----------------
 
 The detection service sends events, heartbeats and video to Tryton through HTTP routes
-authenticated with a key of the *Videovigilància: servei de detecció* user application. See
+authenticated with a key of the *Video Surveillance: Detection Service* user application. See
 doc/service_api.md.
+
+Languages
+---------
+
+Tryton interface strings use English source text, with Catalan and Spanish translations in
+locale/ca.po and locale/es.po. The notices web app is displayed in Spanish.
 
 
 License
