@@ -1283,3 +1283,7 @@ msgstr "Web de avisos"
 msgctxt "model:ir.action,name:wizard_open_web"
 msgid "Notices Web App"
 msgstr "Web de avisos"
+
+msgctxt "model:ir.ui.menu,name:menu_open_web"
+msgid "Notices Web App"
+msgstr "Web de avisos"
