@@ -27,12 +27,14 @@ import re
 from datetime import datetime, timezone
 from functools import wraps
 
+from trytond.model.exceptions import SQLConstraintError
 from trytond.pool import PoolMeta
 from trytond.protocols.wrappers import (
-    HTTPStatus, Response, set_max_request_size, user_application, with_pool,
+    HTTPStatus, Response, abort, set_max_request_size, user_application, with_pool,
     with_transaction)
 from trytond.transaction import without_check_access
 from trytond.wsgi import app
+from werkzeug.exceptions import RequestEntityTooLarge
 
 from . import live
 from .camera import MAX_HEARTBEAT_FRAME, is_frame
@@ -68,8 +70,11 @@ def route(rule, methods, max_size, readonly=None):
     def decorator(func):
         @wraps(func)
         def unchecked(request, *args, **kwargs):
-            with without_check_access():
-                return func(request, *args, **kwargs)
+            try:
+                with without_check_access():
+                    return func(request, *args, **kwargs)
+            except RequestEntityTooLarge:
+                return refuse(HTTPStatus.REQUEST_ENTITY_TOO_LARGE, 'petición demasiado grande')
         handler = set_max_request_size(max_size)(with_pool(
                 with_transaction(readonly=readonly)(service_application(unchecked))))
         return app.route(PREFIX + rule, methods=methods)(handler)
@@ -89,10 +94,10 @@ def utc(value):
     "A naive UTC datetime, what Tryton stores, from an ISO 8601 string."
     try:
         moment = datetime.fromisoformat(value)
-    except (TypeError, ValueError):
+        if moment.tzinfo is not None:
+            moment = moment.astimezone(timezone.utc).replace(tzinfo=None)
+    except (TypeError, ValueError, OverflowError):
         raise ValueError('fecha no válida: %r' % (value,)) from None
-    if moment.tzinfo is not None:
-        moment = moment.astimezone(timezone.utc).replace(tzinfo=None)
     return moment
 
 
@@ -113,6 +118,9 @@ def event_values(request, uid):
         raise ValueError('tipo de evento no admitido')
     if type(values.get('camera')) is not int:
         raise ValueError('«camera» debe ser el id de la cámara')
+    for name, kinds in (('max_persons', (int,)), ('max_confidence', (int, float))):
+        if name in values and type(values[name]) not in kinds:
+            raise ValueError('«%s» no es un número válido' % name)
     for name in ('started_at', 'ended_at'):
         values[name] = utc(values.get(name))
     upload = request.files.get('snapshot')
@@ -147,7 +155,12 @@ def service_event(request, pool, uid):
         return refuse(HTTPStatus.NOT_FOUND, 'no existe la cámara')
     if snapshot:
         values['snapshot'] = snapshot
-    _, created = pool.get('videovigilance.event').create_once(values)
+    try:
+        _, created = pool.get('videovigilance.event').create_once(values)
+    except SQLConstraintError:
+        # Another request is storing this very uid at this moment; the service sends the
+        # event again and then finds it stored.
+        abort(HTTPStatus.CONFLICT)
     return reply({'uid': uid}, HTTPStatus.CREATED if created else HTTPStatus.OK)
 
 

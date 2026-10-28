@@ -11,6 +11,7 @@ import shutil
 import tempfile
 import uuid
 from datetime import datetime
+from unittest.mock import patch
 
 import trytond.config as config
 from cryptography.fernet import Fernet
@@ -145,6 +146,21 @@ class ServiceAPITestCase(RouteTestCase):
         self.assertTrue(snapshot)
         self.assertEqual(creator, self.user)
 
+    def test_an_event_that_another_request_is_storing_is_asked_again_not_duplicated(self):
+        self.assertEqual(self.put_event('race').status_code, HTTPStatus.CREATED)
+        Event = Pool(self.db_name).get('videovigilance.event')
+        # Two requests missed each other's event: only the unique uid stops the second one.
+        with patch.object(Event, 'search', return_value=[]):
+            response = self.put_event('race')
+        self.assertEqual(response.status_code, HTTPStatus.CONFLICT)
+        self.assertEqual(len(self.events('race')), 1)
+
+    def test_an_event_too_big_is_refused_with_a_reason(self):
+        data = {**self.event(), 'snapshot': (io.BytesIO(JPEG + b'0' * 5_000_000), 's.jpg')}
+        response = self.put_event('big', data)
+        self.assertEqual(response.status_code, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+        self.assertIn('error', response.get_json())
+
     def test_what_is_not_a_detection_of_a_camera_is_refused_and_not_stored(self):
         for case, uid, data, status in [
                 ('a field it has no business with', 'bad1', self.event(foo=1), 400),
@@ -160,6 +176,10 @@ class ServiceAPITestCase(RouteTestCase):
                 ('a uid that is too long', 'bad' + 'x' * 70, self.event(), 400),
                 ('a confidence out of range', 'bad8', self.event(max_confidence=2), 400),
                 ('a camera that does not exist', 'bad9', self.event(camera=999999), 404),
+                ('a count that is not a number', 'bad10', self.event(max_persons='many'), 400),
+                ('a boolean taken for a number', 'bad11', self.event(max_confidence=True), 400),
+                ('a time that cannot be put in UTC', 'bad12',
+                    self.event(started_at='9999-12-31T23:59:59-05:00'), 400),
                 ]:
             with self.subTest(case):
                 response = self.put_event(uid, data)
@@ -213,9 +233,9 @@ class ServiceAPITestCase(RouteTestCase):
             return self.client().put(
                 self.url(f'cameras/{camera}/frame'), data=data, headers=self.headers())
         self.assertEqual(put(self.camera, b'not a jpeg').status_code, HTTPStatus.BAD_REQUEST)
-        self.assertEqual(
-            put(self.camera, JPEG + b'0' * (MAX_HEARTBEAT_FRAME + 2048)).status_code,
-            HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+        too_big = put(self.camera, JPEG + b'0' * (MAX_HEARTBEAT_FRAME + 2048))
+        self.assertEqual(too_big.status_code, HTTPStatus.REQUEST_ENTITY_TOO_LARGE)
+        self.assertIn('error', too_big.get_json())
         self.assertEqual(put(999999, JPEG).status_code, HTTPStatus.NOT_FOUND)
 
     # -- the live video ---------------------------------------------------------------
