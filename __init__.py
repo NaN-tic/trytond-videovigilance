@@ -27,11 +27,13 @@ def register():
         push.Message,
         push.Delivery,
         voyager.Site,
+        voyager.Session,
         voyager.Layout,
         voyager.Error,
         module='videovigilance', type_='model')
     Pool.register(
         camera.OpenAlarms,
+        voyager.OpenWeb,
         module='videovigilance', type_='wizard')
     Pool.register(
         module='videovigilance', type_='report')
