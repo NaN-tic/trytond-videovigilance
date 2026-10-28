@@ -5,12 +5,13 @@ from dominate.tags import button, div, form, span, strong
 from trytond.model import fields
 from trytond.modules.voyager.voyager import render_component
 
+from ..push import display_name, is_web_account
 from ..voyager import (
     Component, Endpoint, component, current_user, hidden_csrf, mark_read, nav, page, url)
 
 
 class SessionBar(Component):
-    "User with an active session and a logout button"
+    "The user of the session, with a logout button for a web account"
     __name__ = 'videovigilance.web.session_bar'
     __slots__ = ()
 
@@ -18,10 +19,12 @@ class SessionBar(Component):
         user = current_user()
         with div(cls='mb-4 flex items-center gap-2 text-sm text-gray-400') as root:
             span('Sesión:')
-            strong(user.name or user.login, cls='text-gray-100')
-            with form(method='post', action=url('logout'), cls='ml-auto'):
-                hidden_csrf()
-                button('Salir', type='submit', cls='text-teal-300 hover:text-teal-200')
+            strong(display_name(user), cls='text-gray-100')
+            if is_web_account(user):
+                # A Tryton session is ended in Tryton; a web account ends here.
+                with form(method='post', action=url('logout'), cls='ml-auto'):
+                    hidden_csrf()
+                    button('Salir', type='submit', cls='text-teal-300 hover:text-teal-200')
         return root
 
 

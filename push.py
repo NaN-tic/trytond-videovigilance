@@ -36,6 +36,11 @@ def _group_ids(*names):
     return {ModelData.get_id('videovigilance', name) for name in names}
 
 
+def is_web_account(user):
+    "Whether `user` is a web.user (a web account that logs in with a password), not a Tryton user."
+    return user.__name__ == 'web.user'
+
+
 def has_access(user):
     """Whether the Tryton user can access the web app (admin or reader)."""
     with without_check_access():
@@ -44,9 +49,33 @@ def has_access(user):
 
 
 def is_admin(user):
+    # A web account only reads: administering (the camera, the alarm) needs a Tryton session
+    # of a user in the administration group.
+    if is_web_account(user):
+        return False
     with without_check_access():
         return bool(user.active and _group_ids('group_admin')
             & {group.id for group in user.groups})
+
+
+def display_name(user):
+    return user.email if is_web_account(user) else (user.name or user.login)
+
+
+def authenticate_web_user(email, password):
+    """The web user with this email and password, or None. May raise RateLimitException.
+
+    web.user.authenticate fails with a TypeError on the accounts that have no password (the
+    ones created only to receive notices) once it has applied its limits and delay: that is
+    one more failed attempt.
+    """
+    pool = Pool()
+    email = (email or '').strip().lower()
+    with without_check_access():
+        try:
+            return pool.get('web.user').authenticate(email, password or '')
+        except TypeError:
+            pool.get('web.user.authenticate.attempt').add(email)
 
 
 def web_user_for(user):
@@ -55,6 +84,8 @@ def web_user_for(user):
     Created on first use from the Tryton user's email address. It has no
     password and exists only to receive notices.
     """
+    if is_web_account(user):
+        return user
     pool = Pool()
     User = pool.get('res.user')
     WebUser = pool.get('web.user')
@@ -118,10 +149,14 @@ class Application(metaclass=PoolMeta):
         eligible = super().eligible_user(user)
         if self.code != APPLICATION:
             return eligible
-        # A notice only reaches users who are still Tryton users with access.
+        # A notice reaches a Tryton user while they still have access, and a web account of
+        # its own (not linked to a Tryton user) while it can still log in with a password.
         with without_check_access():
             owners = Pool().get('res.user').search([('web_user', '=', user.id)])
-        return bool(eligible and any(has_access(owner) for owner in owners))
+            has_password = bool(user.password_hash)
+        if owners:
+            return bool(eligible and any(has_access(owner) for owner in owners))
+        return bool(eligible and has_password)
 
 
 class Message(metaclass=PoolMeta):
