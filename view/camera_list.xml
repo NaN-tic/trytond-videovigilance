@@ -5,8 +5,8 @@
     <field name="location"/>
     <field name="host"/>
     <field name="status"/>
-    <field name="status_checked_at" widget="date" string="Check Date"/>
-    <field name="status_checked_at" widget="time" string="Check Time"/>
+    <field name="status_checked_at" widget="date"/>
+    <field name="status_checked_at" widget="time"/>
     <field name="manufacturer"/>
     <field name="device_model"/>
     <field name="onvif_enabled"/>

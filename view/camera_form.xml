@@ -8,7 +8,7 @@
     <field name="location"/>
     <label name="active"/>
     <field name="active"/>
-    <button name="open_alarms" string="Notices" colspan="2"/>
+    <button name="open_alarms" colspan="2"/>
     <label name="manufacturer"/>
     <field name="manufacturer"/>
     <label name="device_model"/>
