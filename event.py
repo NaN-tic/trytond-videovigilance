@@ -93,6 +93,15 @@ class Event(ModelSQL, ModelView):
         return events
 
     @classmethod
+    def create_once(cls, values):
+        "Create the event of `values` unless one with its uid exists: (event, created)."
+        events = cls.search([('uid', '=', values['uid'])], limit=1)
+        if events:
+            return events[0], False
+        event, = cls.create([values])
+        return event, True
+
+    @classmethod
     def notify(cls, events):
         from .push import local_time, notify_users
         # Only people raise alarms; camera movements are just recorded.

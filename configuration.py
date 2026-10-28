@@ -197,6 +197,12 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
 
     @classmethod
     def heartbeat(cls, cameras):
+        "Detection service heartbeat over RPC; the work is done by service_heartbeat."
+        require_service('videovigilance.msg_heartbeat_forbidden')
+        return cls.service_heartbeat(cameras)
+
+    @classmethod
+    def service_heartbeat(cls, cameras):
         """Detection service heartbeat.
 
         Records that the service is alive, applies the reported camera statuses
@@ -204,7 +210,6 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
         intervals for the service to adopt without restarting.
         """
         from .push import local_time
-        require_service('videovigilance.msg_heartbeat_forbidden')
         Camera = Pool().get('videovigilance.camera')
         now = datetime.now()
         with without_check_access():

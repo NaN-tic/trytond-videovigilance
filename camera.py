@@ -37,6 +37,12 @@ DEVICE_FIELDS = (
     ('hardware_id', 'hardware', False))
 
 
+def is_frame(data):
+    "Whether `data` is a JPEG small enough to be kept as the latest picture of a camera."
+    return (isinstance(data, bytes) and 0 < len(data) <= MAX_HEARTBEAT_FRAME
+        and data.startswith(b'\xff\xd8'))
+
+
 def require_service(message):
     "Only the detection service user (the «service» group) can call this method."
     pool = Pool()
@@ -210,6 +216,34 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
                     } for c in cls.search(domain)]
 
     @classmethod
+    def service_config(cls):
+        "What the detection service needs of the active cameras, with their credentials."
+        with without_check_access():
+            return [{
+                    'id': c.id, 'code': c.code, 'host': c.host,
+                    'rtsp_port': c.rtsp_port, 'stream_path': c.stream_path,
+                    'secondary_stream_path': c.secondary_stream_path or None,
+                    'username': c.username,
+                    'password': (secret.decrypt(c.password_encrypted)
+                        if c.password_encrypted else None),
+                    'rotation': int(c.rotation), 'ptz': bool(c.ptz),
+                    'onvif_enabled': bool(c.onvif_enabled),
+                    'onvif_port': c.onvif_port or None,
+                    'detect_persons': bool(c.detect_persons),
+                    'detect_motion': bool(c.detect_motion),
+                    } for c in cls.search([('active', '=', True)])]
+
+    @classmethod
+    def store_frame(cls, camera_id, frame):
+        "Keep the JPEG `frame` as the latest picture of the camera; False if there is none."
+        with without_check_access():
+            cameras = cls.search([('id', '=', camera_id)])
+            if not cameras:
+                return False
+            cls.write(cameras, {'frame': frame, 'frame_at': datetime.now()})
+        return True
+
+    @classmethod
     def for_web(cls, code):
         "The active camera with this code, or None."
         with without_check_access():
@@ -299,8 +333,7 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
                 detail = str(report.get('detail') or '').strip()[:200]
                 values = {'status_checked_at': now, 'status_detail': detail}
                 frame = report.get('frame')
-                if (isinstance(frame, bytes) and frame.startswith(b'\xff\xd8')
-                        and len(frame) <= MAX_HEARTBEAT_FRAME):
+                if is_frame(frame):
                     values.update(frame=frame, frame_at=now)
                 values.update(cls._device_values(camera, report.get('device')))
                 if status != camera.status:

@@ -8,6 +8,13 @@ Installing
 
 See INSTALL
 
+Detection service
+-----------------
+
+The detection service sends events, heartbeats and video to Tryton through HTTP routes
+authenticated with a key of the *Videovigilància: servei de detecció* user application. See
+doc/service_api.md.
+
 
 License
 -------

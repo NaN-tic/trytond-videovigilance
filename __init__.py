@@ -5,7 +5,7 @@
 
 from trytond.pool import Pool
 
-from . import alarm, call, camera, configuration, event, movement, push, routes, voyager, www
+from . import alarm, call, camera, configuration, event, movement, push, res, routes, voyager, www
 
 __all__ = ['register', 'routes']
 
@@ -26,6 +26,7 @@ def register():
         push.Application,
         push.Message,
         push.Delivery,
+        res.UserApplication,
         voyager.Site,
         voyager.Layout,
         voyager.Error,
