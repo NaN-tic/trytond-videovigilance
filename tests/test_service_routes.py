@@ -38,20 +38,16 @@ class ServiceRoutesTestCase(RouteTestCase):
         if not cls.had_section:
             config.add_section('videovigilance')
         cls.secret_key = config.get('videovigilance', 'secret_key', default='')
+        if cls.had_section:
+            cls.addClassCleanup(config.set, 'videovigilance', 'secret_key', cls.secret_key)
+        else:
+            cls.addClassCleanup(config.remove_section, 'videovigilance')
         config.set('videovigilance', 'secret_key', Fernet.generate_key().decode())
         cls.folder = tempfile.mkdtemp()
+        cls.addClassCleanup(shutil.rmtree, cls.folder, True)
+        cls.addClassCleanup(setattr, live, 'DIR', live.DIR)
         live.DIR = cls.folder
         super().setUpClass()
-
-    @classmethod
-    def tearDownClass(cls):
-        super().tearDownClass()
-        if cls.had_section:
-            config.set('videovigilance', 'secret_key', cls.secret_key)
-        else:
-            config.remove_section('videovigilance')
-        live.DIR = None
-        shutil.rmtree(cls.folder, True)
 
     @classmethod
     def setUpDatabase(cls):

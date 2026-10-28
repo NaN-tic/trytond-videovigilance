@@ -3,7 +3,7 @@
 # the full copyright notices and license terms.
 """Tests for the live relay mailbox (no Tryton server, no camera needed).
 
-Run from the module folder:  python -m unittest discover -s tests -v
+Run from the module folder:  python -m unittest tests.test_live -v
 The module is loaded by path so the tests run against this source tree.
 """
 import importlib.util
@@ -14,6 +14,7 @@ import tempfile
 import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 HERE = Path(__file__).resolve().parent.parent
 
@@ -34,8 +35,8 @@ class MailboxTestCase(unittest.TestCase):
     def setUp(self):
         self.folder = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, self.folder, True)
+        self.addCleanup(setattr, live, 'DIR', live.DIR)
         live.DIR = self.folder
-        self.addCleanup(setattr, live, 'DIR', None)
         self.box = live.Mailbox('cameras')
 
     def age(self, path_part, seconds):
@@ -196,15 +197,17 @@ class DirectoryTest(unittest.TestCase):
         folder = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, folder, True)
         os.chmod(folder, 0o755)
+        self.addCleanup(setattr, live, 'DIR', live.DIR)
         live.DIR = folder
-        self.addCleanup(setattr, live, 'DIR', None)
         with self.assertRaisesRegex(RuntimeError, 'privado'):
             live.Mailbox('cameras').want(1)
 
     def test_the_default_directory_is_private(self):
-        live.DIR = None
-        folder = live._directory()
-        self.assertEqual(oct(folder.stat().st_mode & 0o777), '0o700')
+        with tempfile.TemporaryDirectory() as parent:
+            with patch.object(live, 'DIR', None), \
+                    patch.object(live.tempfile, 'gettempdir', return_value=parent):
+                folder = live._directory()
+                self.assertEqual(oct(folder.stat().st_mode & 0o777), '0o700')
 
 
 if __name__ == '__main__':

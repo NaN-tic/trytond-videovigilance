@@ -183,11 +183,12 @@ class MonitorTest(unittest.TestCase):
 
     def test_cameras_without_onvif_or_login_or_connection_are_not_asked(self):
         asked = []
+        no_login = self.onvif_camera('NOLOGIN')
+        no_login.password = None
         monitor = self.monitor([
                 (camera('PLAIN'), True, lambda: None),
-                (self.onvif_camera('NOLOGIN', ), True, lambda: None)],
+                (no_login, True, lambda: None)],
             lambda host, port: (True, ''), device_info=lambda c: asked.append(c.code) or {'model': 'M'})
-        monitor._cameras()[1][0].password = None
         monitor.step()
         self.assertEqual(asked, [])
         down = self.monitor([(self.onvif_camera(), True, lambda: None)],
