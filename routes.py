@@ -107,8 +107,10 @@ def avisos_snapshot(request, pool, message_id, token):
 def avisos_site(request, pool, path):
     Site = pool.get('www.site')
     ModelData = pool.get('ir.model.data')
-    # Without a session, Voyager runs as this system user (no password or groups).
-    user_id = ModelData.get_id('videovigilance', 'user_web')
+    # The user is the one of the Tryton session, so whatever Tryton asks to log in
+    # (a password, WebAuthn...) applies here. Without a session Voyager still needs a user
+    # to show the page that says so: this system user (no password or groups).
+    user_id = request.user_id or ModelData.get_id('videovigilance', 'user_web')
     return Site.dispatch(SITE_TYPE, None, request, user_id,
         web_prefix=f'/{pool.database_name}/avisos')
 
