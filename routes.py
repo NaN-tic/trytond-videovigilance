@@ -5,8 +5,7 @@
 
 Voyager dispatches all dynamic content (see voyager.py and www/). This file only
 mounts that entry point and serves content that needs specific headers: static
-files, the service worker (scoped to the route), the manifest, notice snapshots, and the
-live relay the detection service uses to send video and receive movement commands.
+files, the service worker (scoped to the route), the manifest and notice snapshots.
 """
 
 import hmac
@@ -15,18 +14,15 @@ from datetime import datetime
 
 from trytond.config import config
 from trytond.protocols.wrappers import (
-    HTTPStatus, Response, allow_null_origin, set_max_request_size, with_pool,
-    with_transaction)
+    HTTPStatus, Response, allow_null_origin, with_pool, with_transaction)
 from trytond.wsgi import app
 from werkzeug.utils import send_from_directory
 
-from . import live
 from .assets import STATIC, VERSION
 from .push import snapshot_token
 from .voyager import SITE_TYPE
 
 PREFIX = '/<database_name>/avisos'
-RELAY_MAX_BODY = 64 * 1024
 
 
 @app.route(PREFIX + '/static/<path:path>', methods=['GET', 'HEAD'])
@@ -80,55 +76,6 @@ def avisos_snapshot(request, pool, message_id, token):
     return Response(bytes(event.snapshot), HTTPStatus.OK, content_type='image/jpeg',
         headers={'Cache-Control': 'private, max-age=3600', 'X-Content-Type-Options': 'nosniff',
             'Referrer-Policy': 'no-referrer'})
-
-
-def _relay_mailbox(request, pool):
-    """The mailbox, if the request carries the service's token; None otherwise.
-
-    Checking the token needs no database: frames arrive several times a second.
-    """
-    scheme, _, token = request.headers.get('Authorization', '').partition(' ')
-    if scheme.lower() != 'bearer' or not live.check_token(
-            config.get('videovigilance', 'secret_key'), pool.database_name, token.strip()):
-        return None
-    return live.Mailbox(pool.database_name)
-
-
-def _relay_reply(data, status=HTTPStatus.OK):
-    return Response(json.dumps(data), status, content_type='application/json',
-        headers={'Cache-Control': 'no-store'})
-
-
-@app.route(PREFIX + '/relay/poll', methods=['POST'])
-@set_max_request_size(RELAY_MAX_BODY)
-@with_pool
-def relay_poll(request, pool):
-    """The service's poll: what it sees on each camera in, who is watching and the
-    movement commands waiting out. See live.Mailbox.exchange."""
-    mailbox = _relay_mailbox(request, pool)
-    if mailbox is None:
-        return _relay_reply({'error': 'Testimonio no válido'}, HTTPStatus.UNAUTHORIZED)
-    try:
-        cameras = json.loads(request.get_data())['cameras']
-        reports = {str(int(camera_id)): report for camera_id, report in cameras.items()}
-    except (ValueError, KeyError, TypeError, AttributeError):
-        return _relay_reply({'error': 'Petición no válida'}, HTTPStatus.BAD_REQUEST)
-    return _relay_reply({'cameras': mailbox.exchange(reports)})
-
-
-@app.route(PREFIX + '/relay/<int:camera_id>/frame', methods=['POST'])
-@set_max_request_size(live.MAX_FRAME + 1024)
-@with_pool
-def relay_frame(request, pool, camera_id):
-    "A JPEG frame from the service. The answer tells it whether someone is still watching."
-    mailbox = _relay_mailbox(request, pool)
-    if mailbox is None:
-        return _relay_reply({'error': 'Testimonio no válido'}, HTTPStatus.UNAUTHORIZED)
-    try:
-        wanted = mailbox.accept_frame(camera_id, request.get_data())
-    except ValueError as error:
-        return _relay_reply({'error': str(error)}, HTTPStatus.BAD_REQUEST)
-    return _relay_reply({'wanted': wanted})
 
 
 @app.route(PREFIX + '/', methods=['GET', 'POST'], defaults={'path': ''})

@@ -5,15 +5,13 @@ import logging
 import time
 from datetime import datetime, timedelta
 
-from trytond.config import config
 from trytond.model import ModelSingleton, ModelSQL, ModelView, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Bool, Eval
-from trytond.rpc import RPC
 from trytond.transaction import Transaction, without_check_access
 from trytond.worker import run_task
 
-from .camera import STATUSES, require_service
+from .camera import STATUSES
 
 logger = logging.getLogger(__name__)
 
@@ -100,13 +98,6 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
         "Extensió amb permís de trucada", states={'required': Bool(Eval('call_voice'))},
         help="Extensió de la centraleta que té permís de trucades externes: la "
         "centraleta l'usa per trucar als encarregats quan es llegeix l'alarma.")
-
-    @classmethod
-    def __setup__(cls):
-        super().__setup__()
-        # Writes to the database: this cannot be a read-only call.
-        cls.__rpc__['heartbeat'] = RPC(readonly=False)
-        cls.__rpc__['relay_token'] = RPC()
 
     @staticmethod
     def default_alarm_armed():
@@ -196,12 +187,6 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
             logger.exception("No s'han pogut enviar els avisos de salut")
 
     @classmethod
-    def heartbeat(cls, cameras):
-        "Detection service heartbeat over RPC; the work is done by service_heartbeat."
-        require_service('videovigilance.msg_heartbeat_forbidden')
-        return cls.service_heartbeat(cameras)
-
-    @classmethod
     def service_heartbeat(cls, cameras):
         """Detection service heartbeat.
 
@@ -234,21 +219,6 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
                 }
         cls._send(notices)
         return reply
-
-    @classmethod
-    def relay_token(cls):
-        """Token for the live relay routes (frames and movement commands).
-
-        The service asks for it over the authenticated RPC channel and then presents it
-        on the relay routes, which check it without opening a database transaction.
-        """
-        from . import live
-        require_service('videovigilance.msg_relay_forbidden')
-        return {
-            'token': live.issue_token(
-                config.get('videovigilance', 'secret_key'), Transaction().database.name),
-            'expires_in': live.TOKEN_TTL_S,
-            }
 
     @classmethod
     def check_service(cls):

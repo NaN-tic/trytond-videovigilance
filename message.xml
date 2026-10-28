@@ -34,14 +34,5 @@
         <record model="ir.message" id="msg_secret_key_mismatch">
             <field name="text">No es pot desxifrar la contrasenya: la clau secret_key no és la que es va usar per desar-la.</field>
         </record>
-        <record model="ir.message" id="msg_credentials_forbidden">
-            <field name="text">L'usuari no pertany al grup «Videovigilància: servei» i no pot consultar credencials de càmera.</field>
-        </record>
-        <record model="ir.message" id="msg_heartbeat_forbidden">
-            <field name="text">L'usuari no pertany al grup «Videovigilància: servei» i no pot enviar el batec del servei.</field>
-        </record>
-        <record model="ir.message" id="msg_relay_forbidden">
-            <field name="text">L'usuari no pertany al grup «Videovigilància: servei» i no pot obtenir el testimoni del relé de vídeo.</field>
-        </record>
     </data>
 </tryton>

@@ -13,11 +13,8 @@ files instead of process memory, so it behaves the same with one trytond process
 several workers on the same machine. Every write is atomic (a temporary file that is
 renamed), so a reader sees a whole old file or a whole new one, never a mix.
 
-Authentication of the service on the relay routes is a token signed with the module's
-secret_key: checking it needs no database, which matters at several frames per second.
+The service gets at this mailbox through the routes of api.py, with its key.
 """
-import hashlib
-import hmac
 import json
 import os
 import re
@@ -39,7 +36,6 @@ FRESH_S = 5.0
 COMMAND_TTL_S = 3.0
 # How long a movement error reported by the service is shown to the browser.
 MESSAGE_S = 4.0
-TOKEN_TTL_S = 3600
 MAX_FRAME = 2_000_000
 MAX_CAMERAS = 64
 
@@ -97,28 +93,6 @@ def _unlink(path):
         path.unlink()
     except FileNotFoundError:
         pass
-
-
-def issue_token(secret, database, now=None):
-    "A token the service sends on the relay routes; valid for TOKEN_TTL_S."
-    expires = int((time.time() if now is None else now) + TOKEN_TTL_S)
-    return f'{expires}.{_signature(secret, database, expires)}'
-
-
-def check_token(secret, database, token, now=None):
-    try:
-        expires, signature = token.split('.', 1)
-        expires = int(expires)
-    except (AttributeError, ValueError):
-        return False
-    if expires < (time.time() if now is None else now):
-        return False
-    return hmac.compare_digest(signature, _signature(secret, database, expires))
-
-
-def _signature(secret, database, expires):
-    return hmac.new(secret.encode(), f'relay:{database}:{expires}'.encode(),
-        hashlib.sha256).hexdigest()
 
 
 def mailbox():
