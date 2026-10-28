@@ -7,10 +7,8 @@ from sql import Literal
 from trytond.exceptions import UserError
 from trytond.i18n import gettext
 from trytond.model import Check, DeactivableMixin, ModelSQL, ModelView, Unique, fields
-from trytond.model.exceptions import AccessError
 from trytond.pool import Pool
 from trytond.pyson import Bool, Eval
-from trytond.rpc import RPC
 from trytond.transaction import Transaction, without_check_access
 from trytond.wizard import StateAction, Wizard
 
@@ -41,17 +39,6 @@ def is_frame(data):
     "Whether `data` is a JPEG small enough to be kept as the latest picture of a camera."
     return (isinstance(data, bytes) and 0 < len(data) <= MAX_HEARTBEAT_FRAME
         and data.startswith(b'\xff\xd8'))
-
-
-def require_service(message):
-    "Only the detection service user (the «service» group) can call this method."
-    pool = Pool()
-    User = pool.get('res.user')
-    ModelData = pool.get('ir.model.data')
-    group = ModelData.get_id('videovigilance', 'group_service')
-    if group not in User.get_groups():
-        raise AccessError(gettext(message))
-
 
 
 class Location(DeactivableMixin, ModelSQL, ModelView):
@@ -170,7 +157,6 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
                 'videovigilance.msg_camera_detection_required'),
             ]
         cls._order = [('name', 'ASC'), ('id', 'ASC')]
-        cls.__rpc__['get_credentials'] = RPC()
         cls._buttons.update(
             open_alarms={'invisible': Eval('id', -1) < 0, 'depends': ['id']})
 
@@ -199,21 +185,6 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
         token = secret.encrypt(value) if value else None
         with without_check_access():
             cls.write(cameras, {'password_encrypted': token})
-
-    @classmethod
-    def get_credentials(cls, codes=None):
-        "Plain-text usernames and passwords for active cameras."
-        require_service('videovigilance.msg_credentials_forbidden')
-        domain = [('active', '=', True)]
-        if codes is not None:
-            domain.append(('code', 'in', list(codes)))
-        with without_check_access():
-            return [{
-                    'code': c.code,
-                    'username': c.username,
-                    'password': (secret.decrypt(c.password_encrypted)
-                        if c.password_encrypted else None),
-                    } for c in cls.search(domain)]
 
     @classmethod
     def service_config(cls):

@@ -76,14 +76,6 @@
             <field name="perm_create" eval="False"/>
             <field name="perm_delete" eval="False"/>
         </record>
-        <record model="ir.model.access" id="access_event_service">
-            <field name="model">videovigilance.event</field>
-            <field name="group" ref="group_service"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="False"/>
-            <field name="perm_create" eval="True"/>
-            <field name="perm_delete" eval="False"/>
-        </record>
         <record model="ir.model.access" id="access_event_admin">
             <field name="model">videovigilance.event</field>
             <field name="group" ref="group_admin"/>

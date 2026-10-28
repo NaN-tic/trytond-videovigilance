@@ -47,3 +47,10 @@ Errors are JSON, `{"error": why}`:
 * 413: the request is too big.
 
 The live routes use a read-only transaction: they only touch the files of the mailbox (`live.py`).
+
+## Upgrading from the JSON-RPC
+
+The service used to log in over JSON-RPC and to use the relay routes under `/avisos/relay`. Both
+are gone, with the `Videovigilància: servei` group. Update the module, create the key, clear the
+password of the service user (it no longer logs in) and then deploy the service with the new
+`.env` (`TRYTON_API_TOKEN`); until then the service cannot talk to Tryton.

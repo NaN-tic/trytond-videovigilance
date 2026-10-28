@@ -191,24 +191,6 @@ class CommandTest(MailboxTestCase):
         self.assertEqual(len(first.take(1)) + len(second.take(1)), 1)
 
 
-class TokenTest(unittest.TestCase):
-    def test_a_token_is_valid_for_its_database_until_it_expires(self):
-        token = live.issue_token('secret', 'cameras', now=1000)
-        self.assertTrue(live.check_token('secret', 'cameras', token, now=1000 + live.TOKEN_TTL_S - 1))
-        self.assertFalse(live.check_token('secret', 'cameras', token, now=1000 + live.TOKEN_TTL_S + 1))
-
-    def test_another_secret_or_database_or_tampering_is_refused(self):
-        token = live.issue_token('secret', 'cameras')
-        self.assertFalse(live.check_token('other', 'cameras', token))
-        self.assertFalse(live.check_token('secret', 'other', token))
-        expires, signature = token.split('.')
-        self.assertFalse(live.check_token('secret', 'cameras', f'{int(expires) + 99999}.{signature}'))
-
-    def test_garbage_is_refused_without_errors(self):
-        for token in (None, '', 'x', '123', 'abc.def', '.', '1.2.3'):
-            self.assertFalse(live.check_token('secret', 'cameras', token))
-
-
 class DirectoryTest(unittest.TestCase):
     def test_a_directory_others_can_read_is_refused(self):
         folder = tempfile.mkdtemp()
