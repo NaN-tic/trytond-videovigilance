@@ -11,9 +11,16 @@ See INSTALL
 Detection service
 -----------------
 
-The detection service sends events, heartbeats and video to Tryton through HTTP routes
-authenticated with a key of the *Video Surveillance: Detection Service* user application. See
-doc/service_api.md.
+Each location represents a Raspberry Pi running one detection service for its cameras. In
+the location form, an administration user can generate, replace or revoke its service
+credential. Copy the generated key to that Raspberry's `TRYTON_API_TOKEN`. Each key only
+grants access to cameras belonging to its location; replacing or revoking it does not affect
+other locations. See doc/service_api.md for the API and upgrade instructions.
+
+Service tokens are stored encrypted with `cryptography.fernet`, using the same
+`[videovigilance] secret_key` as camera passwords. Keep this key with your protected backups.
+The database stores only the encrypted token and a SHA-256 fingerprint for authentication;
+`TRYTON_API_TOKEN` on the Raspberry remains the original token shown in the location form.
 
 Languages
 ---------

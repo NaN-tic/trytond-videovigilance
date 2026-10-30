@@ -1,7 +1,7 @@
 # This file is part videovigilance module for Tryton.
 # The COPYRIGHT file at the top level of this repository contains
 # the full copyright notices and license terms.
-"""The picture kept with a camera alarm, and how soon a silent service is noticed.
+"""The picture kept with a camera status event, and how soon a silent service is noticed.
 
 Run with the module installed:  python -m unittest trytond.modules.videovigilance.tests.test_health
 """
@@ -33,21 +33,25 @@ class HealthTestCase(unittest.TestCase):
             [{'code': camera.code, 'detail': 'sin respuesta', **report}], datetime.now())
         return notices, Camera(camera.id)
 
-    def alarms(self, type_):
-        return Pool().get('videovigilance.alarm').search([('type', '=', type_)])
+    def events(self, type_):
+        return Pool().get('videovigilance.event').search([('type', '=', type_)])
 
     @with_transaction()
-    def test_an_outage_alarm_shows_the_last_frame_before_it_and_keeps_it(self):
-        Alarm = Pool().get('videovigilance.alarm')
+    def test_an_outage_is_an_event_not_an_alarm_and_keeps_the_last_frame_before_it(self):
+        pool = Pool()
         camera = self.camera()
         _, camera = self.beat(camera, online=True, frame=FRAME)
         notices, camera = self.beat(camera, online=False)  # no frame while it is down
-        alarm, = Alarm.raise_notices(notices)
-        self.assertEqual(alarm.type, 'camera_offline')
-        self.assertEqual(alarm.snapshot, FRAME)
-        # The camera is back and sends new pictures: the alarm keeps the old one.
+        from trytond.modules.videovigilance.push import notify_users
+        notify_users(notices)
+        self.assertEqual(pool.get('videovigilance.alarm').search([]), [])
+        event, = self.events('camera_offline')
+        self.assertEqual(event.camera, camera)
+        self.assertEqual(event.snapshot, FRAME)
+        self.assertEqual(event.message.split(' · ')[:2], ['N', 'sin respuesta'])
+        # The camera is back and sends new pictures: the event keeps the old one.
         self.beat(camera, online=True, frame=b'\xff\xd8newer')
-        self.assertEqual(Alarm(alarm.id).snapshot, FRAME)
+        self.assertEqual(pool.get('videovigilance.event')(event.id).snapshot, FRAME)
 
     @with_transaction()
     def test_a_detection_alarm_still_shows_the_snapshot_of_its_event(self):
@@ -74,14 +78,14 @@ class HealthTestCase(unittest.TestCase):
         configuration = self.service(
             4, watchdog_checked_at=datetime.now() - timedelta(seconds=5))
         self.assertEqual(Configuration._check_service_once(), 5)
-        self.assertEqual(self.alarms('service_down'), [])
+        self.assertEqual(self.events('service_down'), [])
         Configuration.write([configuration], {
                 'service_last_seen': datetime.now() - timedelta(seconds=11)})
         Configuration._check_service_once()
-        self.assertEqual(len(self.alarms('service_down')), 1)
+        self.assertEqual(len(self.events('service_down')), 1)
         self.assertEqual(Configuration(configuration.id).service_status, 'offline')
-        Configuration._check_service_once()  # still silent: no second alarm
-        self.assertEqual(len(self.alarms('service_down')), 1)
+        Configuration._check_service_once()  # still silent: no second event
+        self.assertEqual(len(self.events('service_down')), 1)
 
     @with_transaction()
     def test_after_tryton_was_stopped_the_service_gets_time_to_come_back(self):
@@ -89,4 +93,4 @@ class HealthTestCase(unittest.TestCase):
         # Never checked before: the silence cannot be counted from before this moment.
         self.service(300)
         Configuration._check_service_once()
-        self.assertEqual(self.alarms('service_down'), [])
+        self.assertEqual(self.events('service_down'), [])

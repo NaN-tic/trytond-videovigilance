@@ -6,6 +6,5 @@
     <field name="camera"/>
     <field name="type"/>
     <field name="directions"/>
-    <field name="max_persons"/>
-    <field name="max_confidence"/>
+    <field name="message"/>
 </tree>

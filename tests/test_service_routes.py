@@ -29,8 +29,11 @@ class ServiceRoutesTestCase(RouteTestCase):
     module = 'videovigilance'
 
     key = uuid.uuid4().hex
+    second_key = uuid.uuid4().hex
+    inactive_key = uuid.uuid4().hex
     cancelled_key = uuid.uuid4().hex
     other_application_key = uuid.uuid4().hex
+    unscoped_key = uuid.uuid4().hex
 
     @classmethod
     def setUpClass(cls):
@@ -53,23 +56,37 @@ class ServiceRoutesTestCase(RouteTestCase):
     def setUpDatabase(cls):
         pool = Pool()
         Application = pool.get('res.user.application')
-        # A user without any group: the key is all the service has.
+        # A user without any group: a scoped key is all the service has.
         user, = pool.get('res.user').create([{'name': 'Servei', 'login': 'servei'}])
         cls.user = user.id
-        for key, application, state in [
-                (cls.key, 'videovigilance', 'validated'),
-                (cls.cancelled_key, 'videovigilance', 'cancelled'),
-                (cls.other_application_key, 'rest', 'validated')]:
-            Application(key=key, user=user.id, application=application, state=state).save()
-        location, = pool.get('videovigilance.location').create([{'name': 'Casa'}])
+        Location = pool.get('videovigilance.location')
+        (cls.location, cls.second_location, cls.inactive_location,
+            cls.cancelled_location) = Location.create([
+                {'name': 'Casa'}, {'name': 'Oficina'}, {'name': 'Magatzem', 'active': False},
+                {'name': 'Cancel·lada'}])
+        applications = [
+            (cls.key, 'videovigilance', 'validated', cls.location.id),
+            (cls.second_key, 'videovigilance', 'validated', cls.second_location.id),
+            (cls.inactive_key, 'videovigilance', 'validated', cls.inactive_location.id),
+            (cls.cancelled_key, 'videovigilance', 'cancelled', cls.cancelled_location.id),
+            (cls.other_application_key, 'rest', 'validated', None),
+            (cls.unscoped_key, 'videovigilance', 'validated', None)]
+        for key, application, state, location in applications:
+            Application(
+                key=key, user=user.id, application=application, state=state,
+                videovigilance_location=location).save()
         entrance, _ = pool.get('videovigilance.camera').create([
                 {'name': 'Entrada', 'code': 'CAM1', 'host': '10.0.0.5', 'rtsp_port': 554,
-                    'stream_path': 'stream1', 'rotation': '0', 'location': location.id,
+                    'stream_path': 'stream1', 'rotation': '0', 'location': cls.location.id,
                     'username': 'user', 'password': 'secreta'},
                 {'name': 'Retirada', 'code': 'CAM2', 'host': '10.0.0.6', 'rtsp_port': 554,
-                    'stream_path': 'stream1', 'rotation': '0', 'location': location.id,
+                    'stream_path': 'stream1', 'rotation': '0', 'location': cls.location.id,
                     'active': False}])
         cls.camera = entrance.id
+        second_camera, = pool.get('videovigilance.camera').create([{
+                'name': 'Garagem', 'code': 'CAM3', 'host': '10.0.1.5', 'rtsp_port': 554,
+                'stream_path': 'stream1', 'rotation': '0', 'location': cls.second_location.id}])
+        cls.second_camera = second_camera.id
 
     def headers(self, key=None):
         return {'Authorization': f'bearer {key or self.key}'}
@@ -102,6 +119,8 @@ class ServiceRoutesTestCase(RouteTestCase):
                 {}, {'Authorization': 'bearer no-such-key'},
                 self.headers(self.cancelled_key),
                 self.headers(self.other_application_key),
+                self.headers(self.unscoped_key),
+                self.headers(self.inactive_key),
                 {'Cookie': 'tryton_session=admin:1:a-tryton-session'}):
             with self.subTest(headers=headers):
                 response = self.client().get(self.url('config'), headers=headers)
@@ -122,6 +141,12 @@ class ServiceRoutesTestCase(RouteTestCase):
                 camera['rotation'], camera['rtsp_port']),
             (self.camera, 'CAM1', 'user', 'secreta', 0, 554))
 
+    def test_each_key_receives_only_its_locations_active_camera(self):
+        response = self.client().get(
+            self.url('config'), headers=self.headers(self.second_key))
+        camera, = response.get_json()['cameras']
+        self.assertEqual((camera['id'], camera['code']), (self.second_camera, 'CAM3'))
+
     def test_config_is_not_sent_again_when_the_service_has_it(self):
         first = self.client().get(self.url('config'), headers=self.headers())
         again = self.client().get(self.url('config'), headers={
@@ -141,6 +166,44 @@ class ServiceRoutesTestCase(RouteTestCase):
             (datetime(2026, 10, 27, 10, 0, 0), datetime(2026, 10, 27, 10, 0, 5)))
         self.assertTrue(snapshot)
         self.assertEqual(creator, self.user)
+
+    def test_an_event_for_another_location_is_not_stored(self):
+        response = self.put_event('foreign-event', self.event(camera=self.second_camera))
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        self.assertEqual(self.events('foreign-event'), [])
+
+    def test_a_uid_collision_with_another_location_is_not_acknowledged(self):
+        created = self.client().put(
+            self.url('events/foreign-collision'),
+            data=self.event(camera=self.second_camera), headers=self.headers(self.second_key))
+        self.assertEqual(created.status_code, HTTPStatus.CREATED)
+        response = self.put_event('foreign-collision')
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        events = self.events('foreign-collision')
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0][0], 'foreign-collision')
+
+    def test_an_event_returned_by_a_concurrent_request_is_checked_for_its_location(self):
+        uid = 'concurrent-foreign-event'
+        Event = Pool(self.db_name).get('videovigilance.event')
+        create_once = Event.create_once
+
+        def concurrent_insert(values):
+            Event.create([{
+                        'uid': uid, 'camera': self.second_camera, 'type': 'person_detection',
+                        'started_at': datetime(2026, 10, 27, 10),
+                        'ended_at': datetime(2026, 10, 27, 11),
+                        }])
+            return create_once(values)
+
+        # A competing location's event becomes visible before the idempotency lookup.
+        with patch.object(Event, 'create_once', side_effect=concurrent_insert):
+            response = self.put_event(uid)
+
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        events = self.events(uid)
+        self.assertEqual(len(events), 1)
+        self.assertEqual(events[0][0], uid)
 
     def test_an_event_that_another_request_is_storing_is_asked_again_not_duplicated(self):
         self.assertEqual(self.put_event('race').status_code, HTTPStatus.CREATED)
@@ -209,6 +272,25 @@ class ServiceRoutesTestCase(RouteTestCase):
                     self.url('heartbeat'), headers=self.headers(), json=body)
                 self.assertEqual(response.status_code, HTTPStatus.BAD_REQUEST)
 
+    def test_a_heartbeat_mixed_with_another_location_is_rejected_before_updates(self):
+        @with_transaction()
+        def state():
+            pool = Pool()
+            Camera = pool.get('videovigilance.camera')
+            cameras = Camera.browse([self.camera, self.second_camera])
+            configuration = pool.get('videovigilance.configuration').get_singleton()
+            return ([(c.status, c.status_detail, c.status_checked_at) for c in cameras],
+                configuration.service_last_seen if configuration else None)
+        before = state()
+        response = self.client().post(
+            self.url('heartbeat'), headers=self.headers(),
+            json={'cameras': [
+                {'code': 'CAM1', 'online': True, 'detail': 'should not stick'},
+                {'code': 'CAM3', 'online': True, 'detail': 'foreign'}]})
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+        self.assertEqual(state(), before)
+
     # -- the latest picture of a camera -----------------------------------------------
 
     def test_the_latest_picture_of_a_camera_is_kept(self):
@@ -222,6 +304,19 @@ class ServiceRoutesTestCase(RouteTestCase):
             camera = Pool().get('videovigilance.camera')(self.camera)
             self.assertEqual(bytes(camera.frame), JPEG)
             self.assertIsNotNone(camera.frame_at)
+        check()
+
+
+    def test_a_frame_for_another_location_is_not_stored(self):
+        response = self.client().put(
+            self.url(f'cameras/{self.second_camera}/frame'), data=JPEG,
+            headers={**self.headers(), 'Content-Type': 'image/jpeg'})
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+
+        @with_transaction()
+        def check():
+            camera = Pool().get('videovigilance.camera')(self.second_camera)
+            self.assertFalse(camera.frame)
         check()
 
     def test_a_picture_that_is_not_one_or_is_too_big_or_has_no_camera_is_refused(self):
@@ -249,6 +344,23 @@ class ServiceRoutesTestCase(RouteTestCase):
                 refused = self.client().post(
                     self.url('live/poll'), headers=self.headers(), json=body)
                 self.assertEqual(refused.status_code, HTTPStatus.BAD_REQUEST)
+
+    def test_a_live_poll_with_a_foreign_camera_is_rejected_before_mailbox_access(self):
+        with patch.object(live.Mailbox, 'exchange') as exchange:
+            response = self.client().post(
+                self.url('live/poll'), headers=self.headers(),
+                json={'cameras': {str(self.second_camera): {
+                    'error': None, 'message': None}}})
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        exchange.assert_not_called()
+
+    def test_a_live_frame_for_another_location_is_not_accepted(self):
+        with patch.object(live.Mailbox, 'accept_frame') as accept_frame:
+            response = self.client().post(
+                self.url(f'live/{self.second_camera}/frame'), data=JPEG,
+                headers=self.headers())
+        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
+        accept_frame.assert_not_called()
 
     def test_a_live_frame_says_whether_somebody_is_still_watching(self):
         response = self.client().post(

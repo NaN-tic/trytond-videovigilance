@@ -9,8 +9,8 @@ from trytond.i18n import gettext
 from trytond.model import Check, DeactivableMixin, ModelSQL, ModelView, Unique, fields
 from trytond.pool import Pool
 from trytond.pyson import Bool, Eval
-from trytond.transaction import Transaction, without_check_access
-from trytond.wizard import StateAction, Wizard
+from trytond.transaction import Transaction, check_access, without_check_access
+from trytond.wizard import Button, StateAction, StateView, Wizard
 
 from . import secret
 
@@ -54,11 +54,82 @@ class Location(DeactivableMixin, ModelSQL, ModelView):
         'videovigilance.location.manager', 'location', "Managers",
         help="People called when a person alarm goes off on a camera of this location. They are "
              "all called at once.")
+    service_token = fields.Function(
+        fields.Char(
+            "Service Token", readonly=True, strip=False,
+            help="Copy this key to TRYTON_API_TOKEN on this location's Raspberry Pi. "
+                 "Generating a new key immediately invalidates the previous one."),
+        'get_service_token')
 
     @classmethod
     def __setup__(cls):
         super().__setup__()
         cls._order = [('name', 'ASC'), ('id', 'ASC')]
+        cls._buttons.update(
+            generate_service_token={
+                'invisible': (Eval('id', -1) < 0) | ~Eval('active'),
+                'depends': ['id', 'active']},
+            revoke_service_token={
+                'invisible': Eval('id', -1) < 0, 'depends': ['id']})
+        cls._buttons.update(
+            show_service_token={
+                'invisible': Eval('id', -1) < 0, 'depends': ['id']})
+
+    @classmethod
+    @ModelView.button_action('videovigilance.wizard_location_service_token')
+    def show_service_token(cls, locations):
+        pass
+
+    @classmethod
+    def get_service_token(cls, locations, name):
+        from .res import SERVICE_APPLICATION
+        with without_check_access():
+            applications = Pool().get('res.user.application').search([
+                    ('videovigilance_location', 'in', [l.id for l in locations]),
+                    ('application', '=', SERVICE_APPLICATION),
+                    ('state', '=', 'validated'),
+                    ])
+            keys = {
+                a.videovigilance_location.id: secret.decrypt(a.videovigilance_key_encrypted)
+                for a in applications}
+        return {l.id: keys.get(l.id) for l in locations}
+
+    @classmethod
+    @ModelView.button
+    def generate_service_token(cls, locations):
+        from .res import SERVICE_APPLICATION
+        Application = Pool().get('res.user.application')
+        with without_check_access():
+            cls.lock(locations)
+            locations = [location for location in locations if location.active]
+            applications = Application.search([
+                    ('videovigilance_location', 'in', [location.id for location in locations]),
+                    ('application', '=', SERVICE_APPLICATION)])
+            by_location = {application.videovigilance_location.id: application
+                for application in applications}
+            for location in locations:
+                application = by_location.get(location.id)
+                if application:
+                    Application.write([application], {
+                            'key': Application.default_key(), 'state': 'validated'})
+                else:
+                    Application.create([{
+                                'user': Transaction().user,
+                                'application': SERVICE_APPLICATION,
+                                'videovigilance_location': location.id,
+                                }])
+
+    @classmethod
+    @ModelView.button
+    def revoke_service_token(cls, locations):
+        from .res import SERVICE_APPLICATION
+        with without_check_access():
+            cls.lock(locations)
+            applications = Pool().get('res.user.application').search([
+                    ('videovigilance_location', 'in', [l.id for l in locations]),
+                    ('application', '=', SERVICE_APPLICATION)])
+            Pool().get('res.user.application').write(
+                applications, {'state': 'cancelled'})
 
 
 class Camera(DeactivableMixin, ModelSQL, ModelView):
@@ -186,8 +257,8 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
             cls.write(cameras, {'password_encrypted': token})
 
     @classmethod
-    def service_config(cls):
-        "What the detection service needs of the active cameras, with their credentials."
+    def service_config(cls, location):
+        "Active cameras of this location, with their credentials."
         with without_check_access():
             return [{
                     'id': c.id, 'code': c.code, 'host': c.host,
@@ -201,7 +272,8 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
                     'onvif_port': c.onvif_port or None,
                     'detect_persons': bool(c.detect_persons),
                     'detect_motion': bool(c.detect_motion),
-                    } for c in cls.search([('active', '=', True)])]
+                    } for c in cls.search([
+                            ('active', '=', True), ('location', '=', location)])]
 
     @classmethod
     def store_frame(cls, camera_id, frame):
@@ -310,7 +382,6 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
                     values.update(status=status, status_changed_at=now)
                     if status == 'offline':
                         notices.append({
-                                'title': 'Cámara sin conexión',
                                 'type': 'camera_offline', 'camera': camera.id,
                                 'body': '%s · %s · desde %s' % (
                                     camera.name, detail or 'sin respuesta',
@@ -318,7 +389,6 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
                                 })
                     elif camera.status == 'offline':
                         notices.append({
-                                'title': 'Cámara recuperada',
                                 'type': 'camera_online', 'camera': camera.id,
                                 'body': '%s · conectada de nuevo · %s' % (
                                     camera.name, local_time(now)),
@@ -353,6 +423,40 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
     @staticmethod
     def default_detect_motion():
         return True
+
+
+class ServiceTokenView(ModelView):
+    "Location service credential"
+    __name__ = 'videovigilance.location.service_token.view'
+
+    token = fields.Char("Service Token", readonly=True, strip=False)
+
+
+class ShowServiceToken(Wizard):
+    "Show the location's service credential for copying"
+    __name__ = 'videovigilance.location.show_service_token'
+
+    start = StateView('videovigilance.location.service_token.view',
+        'videovigilance.location_service_token_view_form', [
+            Button("Close", 'end', 'tryton-close', default=True),
+            ])
+
+    def default_start(self, fields):
+        Location = Pool().get('videovigilance.location')
+        location_id = Transaction().context.get('active_id')
+        if Transaction().context.get('active_model') != Location.__name__ or not location_id:
+            raise UserError(gettext('videovigilance.msg_location_required'))
+        with check_access():
+            values, = Location.read([location_id], ['service_token'])
+        return {'token': values['service_token']}
+
+    @classmethod
+    def execute(cls, session_id, data, state_name):
+        # The client can send view values back when closing. Never persist the token in
+        # ir.session.wizard, including if the client modifies the displayed value.
+        data = {name: {key: value for key, value in values.items() if key != 'token'}
+            if name == 'start' else values for name, values in data.items()}
+        return super().execute(session_id, data, state_name)
 
 
 class OpenAlarms(Wizard):

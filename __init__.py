@@ -13,6 +13,7 @@ __all__ = ['register', 'routes']
 def register():
     Pool.register(
         camera.Location,
+        camera.ServiceTokenView,
         camera.Camera,
         event.Event,
         movement.CameraMovement,
@@ -33,6 +34,7 @@ def register():
         voyager.Error,
         module='videovigilance', type_='model')
     Pool.register(
+        camera.ShowServiceToken,
         camera.OpenAlarms,
         voyager.OpenWeb,
         module='videovigilance', type_='wizard')

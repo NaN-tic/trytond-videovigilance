@@ -342,6 +342,10 @@ msgctxt "field:videovigilance.event,type:"
 msgid "Type"
 msgstr "Tipo"
 
+msgctxt "field:videovigilance.event,message:"
+msgid "Message"
+msgstr "Mensaje"
+
 msgctxt "field:videovigilance.event,uid:"
 msgid "Identifier"
 msgstr "Identificador"
@@ -840,13 +844,9 @@ msgctxt "model:ir.action.act_window.domain,name:act_event_domain_movement"
 msgid "Camera Movements"
 msgstr "Movimientos de cámara"
 
-msgctxt "model:ir.action.act_window.domain,name:act_event_domain_person"
-msgid "Person Motion"
-msgstr "Movimiento de personas"
-
-msgctxt "model:ir.action.act_window.domain,name:act_event_domain_presence"
-msgid "Person Detection"
-msgstr "Detección de personas"
+msgctxt "model:ir.action.act_window.domain,name:act_event_domain_status"
+msgid "Camera and Service Status"
+msgstr "Estado de cámaras y servicio"
 
 msgctxt "model:ir.message,text:msg_camera_code_unique"
 msgid "The camera code must be unique."
@@ -1200,6 +1200,22 @@ msgctxt "selection:videovigilance.event,type:"
 msgid "Person Motion"
 msgstr "Movimiento de persona"
 
+msgctxt "selection:videovigilance.event,type:"
+msgid "Camera Offline"
+msgstr "Cámara sin conexión"
+
+msgctxt "selection:videovigilance.event,type:"
+msgid "Camera Recovered"
+msgstr "Cámara recuperada"
+
+msgctxt "selection:videovigilance.event,type:"
+msgid "Detection Service Recovered"
+msgstr "Servicio de detección recuperado"
+
+msgctxt "selection:videovigilance.event,type:"
+msgid "Detection Service Silent"
+msgstr "Servicio de detección sin señal"
+
 msgctxt "selection:www.site,type:"
 msgid "Video Surveillance: Alarm and Notices"
 msgstr "Videovigilancia: alarma y avisos"
@@ -1287,3 +1303,67 @@ msgstr "Web de avisos"
 msgctxt "model:ir.ui.menu,name:menu_open_web"
 msgid "Notices Web App"
 msgstr "Web de avisos"
+
+msgctxt "field:res.user.application,videovigilance_location:"
+msgid "Video Surveillance Location"
+msgstr "Ubicación de videovigilancia"
+
+msgctxt "help:res.user.application,videovigilance_location:"
+msgid "Raspberry Pi whose cameras this detection service key can access."
+msgstr "Raspberry Pi a cuyas cámaras puede acceder esta clave del servicio de detección."
+
+msgctxt "field:videovigilance.location,service_token:"
+msgid "Service Token"
+msgstr "Credencial del servicio"
+
+msgctxt "help:videovigilance.location,service_token:"
+msgid "Copy this key to TRYTON_API_TOKEN on this location's Raspberry Pi. Generating a new key immediately invalidates the previous one."
+msgstr "Copia esta clave en TRYTON_API_TOKEN de la Raspberry Pi de esta ubicación. Al generar una clave nueva, la anterior deja de funcionar inmediatamente."
+
+msgctxt "model:ir.model.button,string:location_generate_service_token_button"
+msgid "Generate Service Token"
+msgstr "Generar credencial del servicio"
+
+msgctxt "model:ir.model.button,string:location_revoke_service_token_button"
+msgid "Revoke Service Token"
+msgstr "Revocar credencial del servicio"
+
+msgctxt "view:videovigilance.location:"
+msgid "The previous key will stop working. Update TRYTON_API_TOKEN on this Raspberry Pi."
+msgstr "La clave anterior dejará de funcionar. Actualiza TRYTON_API_TOKEN en esta Raspberry Pi."
+
+msgctxt "view:videovigilance.location:"
+msgid "This Raspberry Pi will no longer be able to connect to Tryton."
+msgstr "Esta Raspberry Pi ya no podrá conectarse a Tryton."
+
+msgctxt "model:ir.message,text:msg_location_service_unique"
+msgid "A location can only have one service credential."
+msgstr "Una ubicación solo puede tener una credencial del servicio."
+
+msgctxt "field:res.user.application,videovigilance_key_encrypted:"
+msgid "Encrypted Service Token"
+msgstr "Credencial del servicio cifrada"
+
+msgctxt "field:videovigilance.location.service_token.view,token:"
+msgid "Service Token"
+msgstr "Credencial del servicio"
+
+msgctxt "model:ir.action,name:wizard_location_service_token"
+msgid "Show Service Token"
+msgstr "Mostrar credencial del servicio"
+
+msgctxt "model:ir.model.button,string:location_show_service_token_button"
+msgid "Show Service Token"
+msgstr "Mostrar credencial del servicio"
+
+msgctxt "model:ir.message,text:msg_location_required"
+msgid "Select a location to show its service token."
+msgstr "Selecciona una ubicación para mostrar su credencial del servicio."
+
+msgctxt "wizard_button:videovigilance.location.show_service_token,start,end:"
+msgid "Close"
+msgstr "Cerrar"
+
+msgctxt "model:ir.message,text:msg_location_service_only"
+msgid "Only a video surveillance service credential may be assigned to a location."
+msgstr "Solo se puede asignar una credencial del servicio de videovigilancia a una ubicación."

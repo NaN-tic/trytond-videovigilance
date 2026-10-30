@@ -1,24 +1,27 @@
 # This file is part videovigilance module for Tryton.
 # The COPYRIGHT file at the top level of this repository contains
 # the full copyright notices and license terms.
-"""Events: motion detections and camera movements in one timeline, newest first."""
+"""Events: camera movements and camera/service status changes in one timeline, newest first.
+
+Person detections are alarms (the alarms page), not events."""
 from dominate.tags import a, div, h2, img, li, small, span, strong, ul
 from trytond.model import fields
 from trytond.pool import Pool
 from trytond.protocols.wrappers import Response
 from trytond.transaction import without_check_access
 
+from ..event import STATUS_TYPES, TITLES
 from ..push import local_time
 from ..voyager import (
     Endpoint, component, current_user, json_response, nav, page, url, voyager)
 
 PAGE_SIZE = 12
-# filter name -> (label, event type or None for all)
+# filter name -> (label, event types)
+MOVEMENT_TYPES = ['camera_movement']
 FILTERS = {
-    'all': ('Todos', None),
-    'persons': ('Personas detectadas', 'person_detection'),
-    'motion': ('Personas en movimiento', 'person_motion'),
-    'movements': ('Cámara movida', 'camera_movement'),
+    'all': ('Todos', MOVEMENT_TYPES + STATUS_TYPES),
+    'movements': ('Cámara movida', MOVEMENT_TYPES),
+    'status': ('Estado de cámaras y servicio', STATUS_TYPES),
     }
 CARD = 'mb-3 rounded-xl border border-white/10 bg-gray-800/60 p-4'
 LINK = 'text-teal-300 hover:text-teal-200'
@@ -26,39 +29,28 @@ IMAGE = 'block w-full rounded-lg border border-white/10'
 
 
 def _page(kind, number):
-    "(events of page `number`, total, ids of the events that raised an alarm)"
-    pool = Pool()
-    Event = pool.get('videovigilance.event')
-    Alarm = pool.get('videovigilance.alarm')
-    domain = [('type', '=', FILTERS[kind][1])] if FILTERS[kind][1] else []
+    "(events of page `number` with their camera name, total)"
+    Event = Pool().get('videovigilance.event')
+    domain = [('type', 'in', FILTERS[kind][1])]
     with without_check_access():
         total = Event.search_count(domain)
         events = Event.search(
             domain, order=[('started_at', 'DESC'), ('id', 'DESC')],
             offset=(number - 1) * PAGE_SIZE, limit=PAGE_SIZE)
-        alarmed = {row['event'] for row in Alarm.search_read(
-                [('event', 'in', [event.id for event in events])],
-                fields_names=['event'])}
-        rows = [(event, event.camera.name, event.id in alarmed) for event in events]
+        rows = [(event, event.camera.name if event.camera else None) for event in events]
     return rows, total
 
 
-def _detection(event, camera, alarmed):
+def _status(event, camera):
     with li(cls='py-3') as root:
-        strong('%d persona(s) %s' % (
-                event.max_persons or 1,
-                'en movimiento' if event.type == 'person_motion' else 'detectada(s)'),
-            cls='block text-gray-100')
-        span('%s · %s · confianza %d %%' % (
-                camera, local_time(event.started_at),
-                round((event.max_confidence or 0) * 100)), cls='block text-gray-300')
-        if not alarmed:
-            small('Sin aviso', cls='block text-gray-400',
-                title='La alarma estaba desactivada, se había movido la cámara hacía '
-                'poco o no había dispositivos suscritos.')
+        strong(TITLES[event.type], cls='block text-gray-100')
+        span('%s · %s' % (camera or 'Servicio de detección', local_time(event.started_at)),
+            cls='block text-gray-300')
+        if event.message:
+            small(event.message, cls='block text-gray-400')
         if event.snapshot_id:
             img(src=url('detection_snapshot', event_id=event.id),
-                alt='Captura de la detección', loading='lazy', cls='mt-2 ' + IMAGE)
+                alt='Última imagen de la cámara', loading='lazy', cls='mt-2 ' + IMAGE)
     return root
 
 
@@ -94,7 +86,7 @@ def _movement(event, camera):
 
 
 class EventsPage(Endpoint):
-    "Detections and camera movements, newest first"
+    "Camera movements and camera/service status changes, newest first"
     __name__ = 'videovigilance.web.events'
     __slots__ = ()
     _url = '/events'
@@ -131,11 +123,11 @@ class EventsPage(Endpoint):
                 with ul(cls='divide-y divide-white/10'):
                     if not rows:
                         li('Todavía no hay eventos.', cls='py-3 text-gray-400')
-                    for event, camera, alarmed in rows:
+                    for event, camera in rows:
                         if event.type == 'camera_movement':
                             _movement(event, camera)
                         else:
-                            _detection(event, camera, alarmed)
+                            _status(event, camera)
                 with div(cls='mt-3 flex justify-between text-sm'):
                     if number > 1:
                         a('← Más recientes', cls=LINK, href='%s?type=%s&page=%d' % (
@@ -156,7 +148,7 @@ def image_response(data):
 
 
 class DetectionSnapshot(Endpoint):
-    "Snapshot of one detection; needs a session, but not to be an administrator"
+    "Picture of a status event (the camera's last frame); needs a session, but not to be an administrator"
     __name__ = 'videovigilance.web.detection_snapshot'
     __slots__ = ()
     _url = '/detections/<int:event_id>/snapshot'

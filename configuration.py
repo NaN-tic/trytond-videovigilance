@@ -203,7 +203,6 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
                 cameras if isinstance(cameras, list) else [], now)
             if recovered:
                 notices.append({
-                        'title': 'Servicio de detección recuperado',
                         'type': 'service_up',
                         'body': 'Vuelve a comunicarse · %s' % local_time(now),
                         })
@@ -271,7 +270,6 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
                     and configuration.service_status != 'offline'):
                 values['service_status'] = 'offline'
                 notices.append({
-                        'title': 'Servicio de detección sin señal',
                         'type': 'service_down',
                         'body': 'Sin latidos desde %s. Las cámaras no se '
                         'están vigilando.' % local_time(last_seen),

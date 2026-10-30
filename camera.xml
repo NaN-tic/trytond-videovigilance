@@ -174,5 +174,77 @@
             <field name="perm_create" eval="True"/>
             <field name="perm_delete" eval="True"/>
         </record>
+        <record model="ir.ui.view" id="location_service_token_view_form">
+            <field name="model">videovigilance.location.service_token.view</field>
+            <field name="type">form</field>
+            <field name="name">location_service_token_form</field>
+        </record>
+        <record model="ir.action.wizard" id="wizard_location_service_token">
+            <field name="name">Show Service Token</field>
+            <field name="wiz_name">videovigilance.location.show_service_token</field>
+        </record>
+        <record model="ir.action-res.group" id="wizard_location_service_token_group_admin">
+            <field name="action" ref="wizard_location_service_token"/>
+            <field name="group" ref="group_admin"/>
+        </record>
+        <record model="ir.model.button" id="location_show_service_token_button">
+            <field name="model">videovigilance.location</field>
+            <field name="name">show_service_token</field>
+            <field name="string">Show Service Token</field>
+        </record>
+        <record model="ir.model.button-res.group" id="location_show_service_token_admin">
+            <field name="button" ref="location_show_service_token_button"/>
+            <field name="group" ref="group_admin"/>
+        </record>
+        <record model="ir.model.button" id="location_generate_service_token_button">
+            <field name="model">videovigilance.location</field>
+            <field name="name">generate_service_token</field>
+            <field name="string">Generate Service Token</field>
+        </record>
+        <record model="ir.model.button-res.group" id="location_generate_service_token_admin">
+            <field name="button" ref="location_generate_service_token_button"/>
+            <field name="group" ref="group_admin"/>
+        </record>
+        <record model="ir.model.button" id="location_revoke_service_token_button">
+            <field name="model">videovigilance.location</field>
+            <field name="name">revoke_service_token</field>
+            <field name="string">Revoke Service Token</field>
+        </record>
+        <record model="ir.model.button-res.group" id="location_revoke_service_token_admin">
+            <field name="button" ref="location_revoke_service_token_button"/>
+            <field name="group" ref="group_admin"/>
+        </record>
+        <record model="ir.model.field.access" id="access_location_service_token_default">
+            <field name="model">videovigilance.location</field>
+            <field name="field">service_token</field>
+            <field name="perm_read" eval="False"/>
+            <field name="perm_write" eval="False"/>
+        </record>
+        <record model="ir.model.field.access" id="access_location_service_token_admin">
+            <field name="model">videovigilance.location</field>
+            <field name="field">service_token</field>
+            <field name="group" ref="group_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+        </record>
+        <record model="ir.model.field.access" id="access_application_location_default">
+            <field name="model">res.user.application</field>
+            <field name="field">videovigilance_location</field>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="False"/>
+        </record>
+        <record model="ir.model.field.access" id="access_application_location_admin">
+            <field name="model">res.user.application</field>
+            <field name="field">videovigilance_location</field>
+            <field name="group" ref="group_admin"/>
+            <field name="perm_read" eval="True"/>
+            <field name="perm_write" eval="True"/>
+        </record>
+        <record model="ir.model.field.access" id="access_service_token_encrypted">
+            <field name="model">res.user.application</field>
+            <field name="field">videovigilance_key_encrypted</field>
+            <field name="perm_read" eval="False"/>
+            <field name="perm_write" eval="False"/>
+        </record>
     </data>
 </tryton>
