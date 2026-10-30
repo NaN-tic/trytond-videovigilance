@@ -6,6 +6,14 @@
     <field name="active"/>
     <label name="address"/>
     <field name="address" colspan="3"/>
+    <separator name="service_token" colspan="4"/>
+    <group col="-1" colspan="4" id="service_credentials">
+        <button name="show_service_token"/>
+        <button name="generate_service_token"
+            confirm="The previous key will stop working. Update TRYTON_API_TOKEN on this Raspberry Pi."/>
+        <button name="revoke_service_token"
+            confirm="This Raspberry Pi will no longer be able to connect to Tryton."/>
+    </group>
     <separator name="managers" colspan="4"/>
     <field name="managers" colspan="4"/>
     <separator name="cameras" colspan="4"/>

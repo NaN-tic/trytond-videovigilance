@@ -4,6 +4,15 @@
         <record model="ir.message" id="msg_camera_code_unique">
             <field name="text">The camera code must be unique.</field>
         </record>
+        <record model="ir.message" id="msg_location_service_unique">
+            <field name="text">A location can only have one service credential.</field>
+        </record>
+        <record model="ir.message" id="msg_location_required">
+            <field name="text">Select a location to show its service token.</field>
+        </record>
+        <record model="ir.message" id="msg_location_service_only">
+            <field name="text">Only a video surveillance service credential may be assigned to a location.</field>
+        </record>
         <record model="ir.message" id="msg_web_not_configured">
             <field name="text">No video surveillance web application is configured: the notices page cannot be opened.</field>
         </record>

@@ -52,8 +52,6 @@ class LivePage(Endpoint):
     _url = '/live'
     _method = ['GET']
 
-    code = fields.Char('code')
-
     def render(self):
         user = current_user()
         if user is None:
@@ -70,7 +68,8 @@ class LivePage(Endpoint):
         Camera = Pool().get('videovigilance.camera')
         with without_check_access():
             cameras = Camera.search([('active', '=', True)])
-        camera = next((c for c in cameras if c.code == self.code), None) or (
+        code = voyager().request.args.get('code')
+        camera = next((c for c in cameras if c.code == code), None) or (
             cameras[0] if cameras else None)
         with div() as root:
             component('session_bar')
@@ -125,6 +124,7 @@ class LivePage(Endpoint):
                         cls='text-center text-xs text-gray-400')
                 p('', id='live-message', cls='mt-2 min-h-4 text-center text-xs text-red-400')
         return page(root, title='Cámara')
+
 
 
 class LiveFrame(Endpoint):
