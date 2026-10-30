@@ -211,8 +211,8 @@ def service_event(request, pool, uid, location):
         # event again and then finds it stored.
         abort(HTTPStatus.CONFLICT)
     if not created:
-        Camera.lock([event.camera])
-        if event.camera.location.id != location.id:
+        Camera.lock([event.camera] if event.camera else [])
+        if event.camera is None or event.camera.location.id != location.id:
             return service_refuse(HTTPStatus.NOT_FOUND, 'no existe la cámara')
     return service_reply({'uid': uid}, HTTPStatus.CREATED if created else HTTPStatus.OK)
 

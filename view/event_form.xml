@@ -8,14 +8,12 @@
     <field name="started_at"/>
     <label name="ended_at"/>
     <field name="ended_at"/>
-    <label name="max_persons"/>
-    <field name="max_persons"/>
-    <label name="max_confidence"/>
-    <field name="max_confidence"/>
     <label name="user"/>
     <field name="user"/>
     <label name="directions"/>
     <field name="directions"/>
+    <label name="message"/>
+    <field name="message"/>
     <label name="uid"/>
     <field name="uid"/>
     <newline/>

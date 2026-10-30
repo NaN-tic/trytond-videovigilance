@@ -382,7 +382,6 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
                     values.update(status=status, status_changed_at=now)
                     if status == 'offline':
                         notices.append({
-                                'title': 'Cámara sin conexión',
                                 'type': 'camera_offline', 'camera': camera.id,
                                 'body': '%s · %s · desde %s' % (
                                     camera.name, detail or 'sin respuesta',
@@ -390,7 +389,6 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
                                 })
                     elif camera.status == 'offline':
                         notices.append({
-                                'title': 'Cámara recuperada',
                                 'type': 'camera_online', 'camera': camera.id,
                                 'body': '%s · conectada de nuevo · %s' % (
                                     camera.name, local_time(now)),

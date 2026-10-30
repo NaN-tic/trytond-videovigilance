@@ -342,6 +342,10 @@ msgctxt "field:videovigilance.event,type:"
 msgid "Type"
 msgstr "Tipus"
 
+msgctxt "field:videovigilance.event,message:"
+msgid "Message"
+msgstr "Missatge"
+
 msgctxt "field:videovigilance.event,uid:"
 msgid "Identifier"
 msgstr "Identificador"
@@ -840,13 +844,9 @@ msgctxt "model:ir.action.act_window.domain,name:act_event_domain_movement"
 msgid "Camera Movements"
 msgstr "Moviments de càmera"
 
-msgctxt "model:ir.action.act_window.domain,name:act_event_domain_person"
-msgid "Person Motion"
-msgstr "Moviment de persones"
-
-msgctxt "model:ir.action.act_window.domain,name:act_event_domain_presence"
-msgid "Person Detection"
-msgstr "Detecció de persones"
+msgctxt "model:ir.action.act_window.domain,name:act_event_domain_status"
+msgid "Camera and Service Status"
+msgstr "Estat de càmeres i servei"
 
 msgctxt "model:ir.message,text:msg_camera_code_unique"
 msgid "The camera code must be unique."
@@ -1199,6 +1199,22 @@ msgstr "Detecció de persona"
 msgctxt "selection:videovigilance.event,type:"
 msgid "Person Motion"
 msgstr "Moviment de persona"
+
+msgctxt "selection:videovigilance.event,type:"
+msgid "Camera Offline"
+msgstr "Càmera sense connexió"
+
+msgctxt "selection:videovigilance.event,type:"
+msgid "Camera Recovered"
+msgstr "Càmera recuperada"
+
+msgctxt "selection:videovigilance.event,type:"
+msgid "Detection Service Recovered"
+msgstr "Servei de detecció recuperat"
+
+msgctxt "selection:videovigilance.event,type:"
+msgid "Detection Service Silent"
+msgstr "Servei de detecció sense senyal"
 
 msgctxt "selection:www.site,type:"
 msgid "Video Surveillance: Alarm and Notices"

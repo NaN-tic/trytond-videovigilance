@@ -12,6 +12,8 @@ from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
 from trytond.transaction import without_check_access
 
+from .event import STATUS_TYPES, TITLES
+
 APPLICATION = 'videovigilance'
 
 
@@ -102,16 +104,24 @@ def web_user_for(user):
 def notify_users(notices):
     """Publish notices to all subscribed devices and queue their delivery.
 
-    notices: a list of {'type', 'title', 'body'} and optionally 'camera' and
-    'event' (IDs of the camera and of the originating event). Each one is recorded as
-    an alarm, even if no device is subscribed. Returns the number of queued deliveries.
+    notices: a list of {'type', 'body'} and optionally 'camera' and 'event' (IDs of the
+    camera and of the originating event). The title is that of the type. A person notice
+    is recorded as an alarm, even if no device is subscribed; a camera or service status
+    notice is recorded as an event instead. Returns the number of queued deliveries.
     """
     pool = Pool()
     Application = pool.get('notification.web.application')
     Subscription = pool.get('notification.web.subscription')
     Message = pool.get('notification.web.message')
     Delivery = pool.get('notification.web.delivery')
-    pool.get('videovigilance.alarm').raise_notices(notices)
+    notices = [{'title': TITLES[notice['type']], **notice} for notice in notices]
+    status = [notice for notice in notices if notice['type'] in STATUS_TYPES]
+    if status:
+        for notice, event in zip(status, pool.get('videovigilance.event').record_status(status)):
+            notice['event'] = event.id
+    people = [notice for notice in notices if notice['type'] not in STATUS_TYPES]
+    if people:
+        pool.get('videovigilance.alarm').raise_notices(people)
     with without_check_access():
         applications = Application.search([('code', '=', APPLICATION)], limit=1)
         if not applications or not applications[0].push_enabled:

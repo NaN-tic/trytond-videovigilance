@@ -205,13 +205,19 @@ class CallTestCase(unittest.TestCase):
         self.assertEqual(len(Pbx.dials), 2)
 
     @with_transaction()
-    def test_health_notices_never_call(self):
+    def test_health_notices_never_call_and_are_events_not_alarms(self):
+        from trytond.modules.videovigilance.push import notify_users
+        pool = Pool()
         _, camera = self.scenario()
-        Pool().get('videovigilance.alarm').raise_notices([{
+        notify_users([{
                     'type': 'camera_offline', 'camera': camera.id,
                     'title': 'x', 'body': 'y'}])
         self.run_queue()
         self.assertEqual(Pbx.dials, [])
+        self.assertEqual(pool.get('videovigilance.alarm').search([]), [])
+        self.assertEqual(
+            [e.type for e in pool.get('videovigilance.event').search([])],
+            ['camera_offline'])
 
     @with_transaction()
     def test_a_number_that_cannot_be_dialled_is_refused_when_saved(self):
