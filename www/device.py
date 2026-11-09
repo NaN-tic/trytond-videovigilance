@@ -10,11 +10,13 @@ from trytond.modules.notification_web_push.notification import (
     validate_endpoint, validate_subscription_keys)
 from trytond.pool import Pool
 from trytond.transaction import Transaction, without_check_access
+from trytond.modules.xgettext import _
 
 from ..assets import VERSION
 from ..push import web_user_for
 from ..voyager import (
-    Component, Endpoint, application, base, csrf, guard, json_response, url, voyager)
+    Component, Endpoint, application, base, csrf, guard, json_response, url,
+    voyager)
 
 
 class DeviceCard(Component):
@@ -33,13 +35,18 @@ class DeviceCard(Component):
                     'data-test': url('push_test'),
                     'data-key': app.public_key if app else '',
                     'data-sw': f'{base()}sw.js?v={VERSION}',
-                    'data-enabled': '1' if app and app.push_enabled else '0'}) as root:
-            h2('Este dispositivo', cls='mb-2 text-sm font-semibold text-gray-400')
-            p('Comprobando…', id='device-state', cls='mb-3 text-gray-100')
+                    'data-enabled': '1' if app and app.push_enabled else '0',
+                }) as root:
+            h2(_('This device'),
+                cls='mb-2 text-sm font-semibold text-gray-400')
+            p(_('Checking…'),
+                id='device-state', cls='mb-3 text-gray-100')
             with div(cls='flex gap-2'):
-                button('Activar avisos', id='toggle', type='button', cls='rounded-lg '
+                button(_('Enable notifications'),
+                    id='toggle', type='button', cls='rounded-lg '
                     'bg-teal-400 px-4 py-2.5 font-semibold text-gray-900 hover:bg-teal-300')
-                button('Enviar prueba', id='test', type='button', hidden=True,
+                button(_('Send test'),
+                    id='test', type='button', hidden=True,
                     cls='rounded-lg border border-white/20 px-4 py-2.5 font-semibold '
                     'text-gray-100 hover:bg-white/5')
         return root
@@ -63,9 +70,12 @@ class PushSubscribe(Endpoint):
             return error
         app = application()
         if app is None or not app.active:
-            return json_response({'error': 'Aplicación no configurada'}, 503)
+            return json_response({
+                'error': _('Application not configured.')},
+                503)
         if not all((self.endpoint, self.p256dh, self.auth)):
-            return json_response({'error': 'Suscripción incompleta'}, 400)
+            return json_response({
+                'error': _('Incomplete subscription.')}, 400)
         try:
             validate_endpoint(self.endpoint)
             validate_subscription_keys(self.p256dh, self.auth)
@@ -107,7 +117,8 @@ class PushUnsubscribe(Endpoint):
             return error
         app = application()
         if app is None or not self.endpoint:
-            return json_response({'error': 'Falta el dispositivo'}, 400)
+            return json_response({
+                'error': _('Device missing.')}, 400)
         Subscription = Pool().get('notification.web.subscription')
         web_user = web_user_for(user)
         with without_check_access():
@@ -133,17 +144,21 @@ class PushTest(Endpoint):
             return error
         app = application()
         if app is None or not app.active:
-            return json_response({'error': 'Aplicación no configurada'}, 503)
+            return json_response({
+                'error': _('Application not configured.')},
+                503)
         pool = Pool()
         Message = pool.get('notification.web.message')
         Delivery = pool.get('notification.web.delivery')
         web_user = web_user_for(user)
         with without_check_access():
-            message = Message.publish(app, web_user, title='Aviso de prueba',
-                body='Si lees esto, los avisos funcionan en este dispositivo.')
+            message = Message.publish(app, web_user,
+                title=_('Test notice'),
+                body=_('If you can read this, notifications work on this device.'))
             deliveries = Delivery.search([('message', '=', message.id)]) if message else []
             if not deliveries:
-                return json_response({'error': 'Este dispositivo no está suscrito'}, 409)
+                return json_response({
+                    'error': _('This device is not subscribed.')}, 409)
             # Sent when the transaction is committed, without waiting for the cron job.
             Delivery.__queue__.send(deliveries)
         return json_response({'queued': len(deliveries)})

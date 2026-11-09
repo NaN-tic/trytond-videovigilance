@@ -14,6 +14,8 @@
         <record model="ir.action.act_window" id="act_event">
             <field name="name">Events</field>
             <field name="res_model">videovigilance.event</field>
+            <!-- Person detections are alarms, not events. -->
+            <field name="domain" eval="[('type', 'not in', ['person_motion', 'person_detection'])]" pyson="1"/>
         </record>
         <record model="ir.action.act_window.view" id="act_event_view1">
             <field name="sequence" eval="10"/>
@@ -31,24 +33,17 @@
             <field name="domain" eval="[]" pyson="1"/>
             <field name="act_window" ref="act_event"/>
         </record>
-        <record model="ir.action.act_window.domain" id="act_event_domain_person">
-            <field name="name">Person Motion</field>
-            <field name="sequence" eval="20"/>
-            <field name="domain" eval="[('type', '=', 'person_motion')]" pyson="1"/>
-            <field name="count" eval="True"/>
-            <field name="act_window" ref="act_event"/>
-        </record>
-        <record model="ir.action.act_window.domain" id="act_event_domain_presence">
-            <field name="name">Person Detection</field>
-            <field name="sequence" eval="25"/>
-            <field name="domain" eval="[('type', '=', 'person_detection')]" pyson="1"/>
-            <field name="count" eval="True"/>
-            <field name="act_window" ref="act_event"/>
-        </record>
         <record model="ir.action.act_window.domain" id="act_event_domain_movement">
             <field name="name">Camera Movements</field>
-            <field name="sequence" eval="30"/>
+            <field name="sequence" eval="20"/>
             <field name="domain" eval="[('type', '=', 'camera_movement')]" pyson="1"/>
+            <field name="count" eval="True"/>
+            <field name="act_window" ref="act_event"/>
+        </record>
+        <record model="ir.action.act_window.domain" id="act_event_domain_status">
+            <field name="name">Camera and Service Status</field>
+            <field name="sequence" eval="30"/>
+            <field name="domain" eval="[('type', 'in', ['camera_offline', 'camera_online', 'service_down', 'service_up'])]" pyson="1"/>
             <field name="count" eval="True"/>
             <field name="act_window" ref="act_event"/>
         </record>

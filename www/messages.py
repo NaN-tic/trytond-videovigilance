@@ -8,6 +8,7 @@ from dominate.tags import div, h2, img, li, small, span, strong, ul
 from trytond.model import fields
 from trytond.pool import Pool
 from trytond.transaction import without_check_access
+from trytond.modules.xgettext import _
 
 from ..push import local_time, web_user_for
 from ..voyager import (
@@ -44,7 +45,8 @@ class MessageItem(Component):
             small(local_time(message.create_date), cls='block text-gray-400')
             path = message.snapshot_path() if message.expires_at > datetime.now() else None
             if path:
-                img(src=base() + path, alt='Captura del movimiento', loading='lazy',
+                img(src=base() + path,
+                    alt=_('Movement snapshot'),
                     cls='mt-2 block w-full rounded-lg border border-white/10')
         return root
 
@@ -61,7 +63,8 @@ class Messages(Endpoint):
     def render(self):
         user = current_user()
         if user is None:
-            return json_response({'error': 'Sesión no iniciada'}, 401)
+            return json_response({
+                'error': _('No active session.')}, 401)
         app = application()
         items = []
         if app is not None:
@@ -75,10 +78,12 @@ class Messages(Endpoint):
                 'bg-gray-800/60 p-4', **{
                     'hx-get': url('messages'), 'hx-trigger': 'every 20s',
                     'hx-swap': 'outerHTML'}) as root:
-            h2('Alarmas', cls='mb-2 text-sm font-semibold text-gray-400')
+            h2(_('Alarms'),
+                cls='mb-2 text-sm font-semibold text-gray-400')
             with ul(cls='divide-y divide-white/10'):
                 if not items:
-                    li('Todavía no hay avisos.', cls='py-3 text-gray-400')
+                    li(_('No notices yet.'),
+                        cls='py-3 text-gray-400')
                 for message in items:
                     component('message_item', message=message,
                         highlight=message.id == self.highlight)

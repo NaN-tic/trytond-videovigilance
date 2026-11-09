@@ -24,6 +24,7 @@ from dominate.tags import a, div, h1, input_, link, meta, p, script
 from sql import Null
 from trytond.exceptions import UserError
 from trytond.i18n import gettext
+from trytond.modules.xgettext import _
 from trytond.model import fields
 from trytond.modules.voyager.voyager import (
     Component as VoyagerComponent, Endpoint as VoyagerEndpoint)
@@ -113,7 +114,7 @@ class Endpoint(Component, VoyagerEndpoint):
 
     def lazy_content(self):
         # Voyager's indicator uses inline styles, which the CSP does not allow.
-        return div('Cargando…', cls='py-3 text-sm text-gray-400')
+        return div(_('Loading…'), cls='py-3 text-sm text-gray-400')
 
 
 def component(name, **values):
@@ -196,14 +197,13 @@ def web_account():
 def access_problem(user):
     "(status, text) of why `user` (see tryton_user) cannot use the web app; None if it can."
     if user is None:
-        return 401, 'Inicia sesión para ver los avisos.'
+        return 401, _('Sign in to view notices.')
     if not has_access(user):
-        return 403, 'Tu usuario de Tryton no tiene acceso a esta web.'
+        return 403, _('Your Tryton user does not have access to this website.')
     with without_check_access():
         has_email = bool((user.email or '').strip())
     if not has_email:
-        return 403, ('Tu usuario de Tryton no tiene correo: añádelo en Preferencias '
-            'para poder recibir avisos.')
+        return 403, _('Your Tryton user has no email address. Add one in Preferences to receive notices.')
     return None
 
 
@@ -232,9 +232,11 @@ def guard(token):
     """Return (user, None) or (None, error response)."""
     user = current_user()
     if user is None:
-        return None, json_response({'error': 'Sesión no iniciada'}, 401)
+        return None, json_response({
+                'error': _('No active session.')}, 401)
     if not csrf_ok(token):
-        return None, json_response({'error': 'Token CSRF no válido'}, 403)
+        return None, json_response({
+                'error': _('Invalid CSRF token.')}, 403)
     return user, None
 
 
@@ -249,9 +251,9 @@ def nav(active):
     Create it inside the parent's «with» block: it attaches itself there.
     """
     user = current_user()
-    pages = [('index', 'Alarmas'), ('events', 'Eventos')]
+    pages = [('index', _('Alarms')), ('events', _('Events'))]
     if user is not None and is_admin(user):
-        pages.append(('live', 'Cámara'))
+        pages.append(('live', _('Camera')))
     with div(cls='mb-4 flex gap-2 text-sm') as root:
         for name, text in pages:
             a(text, href=url(name), cls='rounded-lg px-3 py-1.5 font-semibold ' + (
@@ -303,10 +305,10 @@ class Layout(Component):
         site = self.site
         web_prefix = (self.web_prefix() or '').rstrip('/')
         static_path = f'{web_prefix}/static'
-        title = self.title or site.title or 'Videovigilància'
+        title = self.title or site.title or _('Video surveillance')
 
         doc = document(title=title)
-        doc.set_attribute('lang', 'es')
+        doc.set_attribute('lang', Transaction().language or 'en')
         doc.set_attribute('class', 'bg-gray-900')
         with doc.head:
             meta(charset='utf-8')
@@ -340,11 +342,11 @@ class Error(Endpoint):
     status = fields.Integer('Status')
 
     TITLES = {
-        400: 'Petición no válida',
-        403: 'Acceso denegado',
-        404: 'Página no encontrada',
-        405: 'Método no permitido',
-        500: 'Error del servidor',
+        400: lambda: _('Invalid request'),
+        403: lambda: _('Access denied'),
+        404: lambda: _('Page not found'),
+        405: lambda: _('Method not allowed'),
+        500: lambda: _('Server error'),
         }
 
     def get_status(self):
@@ -352,11 +354,12 @@ class Error(Endpoint):
 
     def render(self):
         status = self.get_status()
-        title = self.TITLES[status]
+        title = self.TITLES[status]()
         with div(cls='py-16 text-center') as content:
             p(str(status), cls='text-6xl font-semibold tracking-tight text-gray-100')
             p(title, cls='mt-4 text-xl text-gray-300')
-            a('Volver al inicio →', href=url('index'),
+            a(_('Back to home →'),
+                href=url('index'),
                 cls='mt-8 inline-block font-semibold text-teal-300 hover:text-teal-200')
         return page(content, title=f'{status} {title}')
 

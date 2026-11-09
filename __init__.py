@@ -5,7 +5,7 @@
 
 from trytond.pool import Pool
 
-from . import alarm, call, camera, configuration, event, movement, push, res, routes, voyager, www
+from . import alarm, call, camera, configuration, event, movement, push, routes, voyager, www
 
 __all__ = ['register', 'routes']
 
@@ -13,6 +13,7 @@ __all__ = ['register', 'routes']
 def register():
     Pool.register(
         camera.Location,
+        camera.ServiceTokenView,
         camera.Camera,
         event.Event,
         movement.CameraMovement,
@@ -26,13 +27,13 @@ def register():
         push.Application,
         push.Message,
         push.Delivery,
-        res.UserApplication,
         voyager.Site,
         voyager.Session,
         voyager.Layout,
         voyager.Error,
         module='videovigilance', type_='model')
     Pool.register(
+        camera.ShowServiceToken,
         camera.OpenAlarms,
         voyager.OpenWeb,
         module='videovigilance', type_='wizard')

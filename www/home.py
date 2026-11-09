@@ -4,10 +4,12 @@
 from dominate.tags import button, div, form, span, strong
 from trytond.model import fields
 from trytond.modules.voyager.voyager import render_component
+from trytond.modules.xgettext import _
 
 from ..push import display_name, is_web_account
 from ..voyager import (
-    Component, Endpoint, component, current_user, hidden_csrf, mark_read, nav, page, url)
+    Component, Endpoint, component, current_user, hidden_csrf, mark_read, nav,
+    page, url)
 
 
 class SessionBar(Component):
@@ -18,13 +20,14 @@ class SessionBar(Component):
     def render(self):
         user = current_user()
         with div(cls='mb-4 flex items-center gap-2 text-sm text-gray-400') as root:
-            span('Sesión:')
+            span(_('Session:'))
             strong(display_name(user), cls='text-gray-100')
             if is_web_account(user):
                 # A Tryton session is ended in Tryton; a web account ends here.
                 with form(method='post', action=url('logout'), cls='ml-auto'):
                     hidden_csrf()
-                    button('Salir', type='submit', cls='text-teal-300 hover:text-teal-200')
+                    button(_('Log out'), type='submit',
+                        cls='text-teal-300 hover:text-teal-200')
         return root
 
 
@@ -59,7 +62,8 @@ class Index(Endpoint):
     def render(self):
         if current_user() is None:
             return page(component('login_form'))
-        return page(component('dashboard'), title='Alarmas')
+        return page(component('dashboard'),
+            title=_('Alarms'))
 
 
 class NotificationPage(Endpoint):
@@ -76,4 +80,5 @@ class NotificationPage(Endpoint):
         if user is None:
             return page(component('login_form'))
         mark_read(user, self.message_id)
-        return page(component('dashboard', highlight=self.message_id), title='Alarmas')
+        return page(component('dashboard', highlight=self.message_id),
+            title=_('Alarms'))
