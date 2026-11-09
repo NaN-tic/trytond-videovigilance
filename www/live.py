@@ -14,20 +14,27 @@ from trytond.model import fields
 from trytond.pool import Pool
 from trytond.protocols.wrappers import Response
 from trytond.transaction import without_check_access
+from trytond.modules.xgettext import _
 
 from .. import live
 from ..push import is_admin
 from ..voyager import (
-    Endpoint, base, component, csrf, current_user, guard, json_response, nav, page, url,
-    voyager)
+    Endpoint, base, component, csrf, current_user, guard, json_response, nav,
+    page, url, voyager)
 
 # (symbol, dx, dy, accessible name): dx is to the right and dy is up, as seen on screen.
 PAD = [
-    ('', 0, 0, None), ('▲', 0, 1, 'Arriba'), ('', 0, 0, None),
-    ('◄', -1, 0, 'Izquierda'), ('■', 0, 0, 'Parar'), ('►', 1, 0, 'Derecha'),
-    ('', 0, 0, None), ('▼', 0, -1, 'Abajo'), ('', 0, 0, None),
+    ('', 0, 0, None), ('▲', 0, 1, lambda: _('Up')),
+    ('', 0, 0, None), ('◄', -1, 0, lambda: _('Left')),
+    ('■', 0, 0, lambda: _('Stop')),
+    ('►', 1, 0, lambda: _('Right')),
+    ('', 0, 0, None), ('▼', 0, -1, lambda: _('Down')),
+    ('', 0, 0, None),
     ]
-SPEEDS = [('0.3', 'Lenta'), ('0.6', 'Normal'), ('1', 'Rápida')]
+SPEEDS = [
+    ('0.3', lambda: _('Slow')),
+    ('0.6', lambda: _('Normal')),
+    ('1', lambda: _('Fast'))]
 BUTTON = ('flex h-14 items-center justify-center rounded-lg border border-white/20 '
     'bg-gray-800 text-2xl text-gray-100 active:bg-teal-400 active:text-gray-900')
 
@@ -36,12 +43,15 @@ def _admin_camera(code):
     """(camera, None) for an administrator and an existing camera, or (None, error)."""
     user = current_user()
     if user is None:
-        return None, json_response({'error': 'Sesión no iniciada'}, 401)
+        return None, json_response({
+            'error': _('No active session.')}, 401)
     if not is_admin(user):
-        return None, json_response({'error': 'Solo un administrador puede usar la cámara'}, 403)
+        return None, json_response({
+            'error': _('Only an administrator can use the camera.')}, 403)
     camera = Pool().get('videovigilance.camera').for_web(code)
     if camera is None:
-        return None, json_response({'error': 'La cámara no existe'}, 404)
+        return None, json_response({
+            'error': _('Camera not found.')}, 404)
     return camera, None
 
 
@@ -55,16 +65,17 @@ class LivePage(Endpoint):
     def render(self):
         user = current_user()
         if user is None:
-            return page(div(p('Inicia sesión para ver la cámara.',
-                        cls='text-gray-400'), a('Entrar', href=base(),
+            return page(div(p(_('Sign in to view the camera.'),
+                        cls='text-gray-400'), a(
+                        _('Sign in'), href=base(),
                         cls='text-teal-300 hover:text-teal-200')))
         if not is_admin(user):
             with div() as root:
                 component('session_bar')
                 nav('live')
-                p('Solo un administrador puede ver la cámara en directo.',
+                p(_('Only an administrator can view the live camera.'),
                     cls='text-gray-400')
-            return page(root, status=403, title='Cámara')
+            return page(root, status=403, title=_('Camera'))
         Camera = Pool().get('videovigilance.camera')
         with without_check_access():
             cameras = Camera.search([('active', '=', True)])
@@ -75,8 +86,8 @@ class LivePage(Endpoint):
             component('session_bar')
             nav('live')
             if camera is None:
-                p('No hay ninguna cámara activa.', cls='text-gray-400')
-                return page(root, title='Cámara')
+                p(_('No active camera.'), cls='text-gray-400')
+                return page(root, title=_('Camera'))
             if len(cameras) > 1:
                 with div(cls='mb-3 flex flex-wrap gap-2'):
                     for other in cameras:
@@ -94,36 +105,40 @@ class LivePage(Endpoint):
                 with div(cls='relative mb-3 overflow-hidden rounded-lg bg-black'):
                     canvas(id='live-canvas', width='640', height='360',
                         cls='block h-auto w-full')
-                    p('Conectando…', id='live-status', cls='absolute left-2 top-2 '
-                        'rounded bg-black/60 px-2 py-1 text-xs text-gray-100')
+                    p(_('Connecting…'), id='live-status',
+                        cls='absolute left-2 top-2 rounded bg-black/60 px-2 py-1 text-xs '
+                        'text-gray-100')
                 if camera.ptz_available:
                     with div(cls='mx-auto grid w-52 touch-none select-none grid-cols-3 gap-2'):
                         for symbol, dx, dy, name in PAD:
                             if name is None:
                                 div()
                                 continue
-                            attributes = {'type': 'button', 'aria-label': name, 'title': name}
-                            if name != 'Parar':
+                            label_text = name()
+                            attributes = {
+                                'type': 'button', 'aria-label': label_text,
+                                'title': label_text}
+                            if dx or dy:
                                 attributes.update({'data-dx': str(dx), 'data-dy': str(dy)})
                             else:
                                 attributes['data-halt'] = '1'
                             button(symbol, cls=BUTTON, **attributes)
                     with div(cls='mt-3 flex items-center justify-center gap-2 text-sm '
                             'text-gray-400'):
-                        label('Velocidad', **{'for': 'live-speed'})
+                        label(_('Speed'),
+                            **{'for': 'live-speed'})
                         with select(id='live-speed', cls='rounded-lg border-white/20 '
                                 'bg-gray-900 py-1 text-sm text-gray-100'):
-                            for value, name in SPEEDS:
-                                option(name, value=value, selected=(value == '0.6'))
-                    p('Mantén pulsada una flecha para mover la cámara; también sirven las '
-                        'teclas de flecha. Se detiene al soltar.',
+                            for value, message in SPEEDS:
+                                option(message(), value=value,
+                                    selected=(value == '0.6'))
+                    p(_('Hold an arrow to move the camera; you can also use the arrow keys. It stops when you release.'),
                         cls='mt-3 text-center text-xs text-gray-400')
                 else:
-                    p('Esta cámara no se puede mover desde aquí (necesita PTZ y ONVIF '
-                        'activados, con usuario y contraseña).',
+                    p(_('This camera cannot be moved from here (PTZ and ONVIF must be enabled, with a username and password).'),
                         cls='text-center text-xs text-gray-400')
                 p('', id='live-message', cls='mt-2 min-h-4 text-center text-xs text-red-400')
-        return page(root, title='Cámara')
+        return page(root, title=_('Camera'))
 
 
 
@@ -157,8 +172,8 @@ class LiveFrame(Endpoint):
             headers['X-Live-Message'] = quote(message)
         if frame is None:
             if not mailbox.service_online():
-                return json_response(
-                    {'error': 'El servicio de detección no está conectado'}, 503)
+                return json_response({
+                    'error': _('The detection service is not connected.')}, 503)
             if problem:
                 return json_response({'error': problem.capitalize()}, 503)
             return Response(status=204, headers=headers)
@@ -188,14 +203,18 @@ class LiveMove(Endpoint):
         if error is not None:
             return error
         if self.dx not in (-1, 0, 1) or self.dy not in (-1, 0, 1) or not (self.dx or self.dy):
-            return json_response({'error': 'Dirección no válida'}, 400)
+            return json_response({
+                'error': _('Invalid direction.')}, 400)
         if not camera.ptz_available:
-            return json_response({'error': 'Esta cámara no se puede mover'}, 409)
+            return json_response({
+                'error': _('This camera cannot be moved from here.')}, 409)
         speed = min(1.0, max(0.1, self.speed or 0.6))
         try:
             camera.ptz_move(self.dx, self.dy, speed, user)
         except live.ServiceOffline as problem:
-            return json_response({'error': 'La cámara no obedece: %s' % problem}, 424)
+            return json_response({
+                'error': _('The camera is not responding: %(error)s') % {
+                    'error': problem}}, 424)
         return json_response({'moving': True})
 
 
@@ -217,9 +236,12 @@ class LiveStop(Endpoint):
         if error is not None:
             return error
         if not camera.ptz_available:
-            return json_response({'error': 'Esta cámara no se puede mover'}, 409)
+            return json_response({
+                'error': _('This camera cannot be moved from here.')}, 409)
         try:
             camera.ptz_stop()
         except live.ServiceOffline as problem:
-            return json_response({'error': 'La cámara no obedece: %s' % problem}, 424)
+            return json_response({
+                'error': _('The camera is not responding: %(error)s') % {
+                    'error': problem}}, 424)
         return json_response({'moving': False})

@@ -8,6 +8,7 @@ from datetime import timezone
 from zoneinfo import ZoneInfo
 
 from trytond.config import config
+from trytond.modules.xgettext import _
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
 from trytond.transaction import without_check_access
@@ -114,7 +115,9 @@ def notify_users(notices):
     Subscription = pool.get('notification.web.subscription')
     Message = pool.get('notification.web.message')
     Delivery = pool.get('notification.web.delivery')
-    notices = [{'title': TITLES[notice['type']], **notice} for notice in notices]
+    notices = [{
+        'title': TITLES[notice['type']](), **notice}
+        for notice in notices]
     status = [notice for notice in notices if notice['type'] in STATUS_TYPES]
     if status:
         for notice, event in zip(status, pool.get('videovigilance.event').record_status(status)):

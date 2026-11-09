@@ -5,6 +5,7 @@ import logging
 import time
 from datetime import datetime, timedelta
 
+from trytond.modules.xgettext import _
 from trytond.model import ModelSingleton, ModelSQL, ModelView, fields
 from trytond.pool import Pool, PoolMeta
 from trytond.pyson import Bool, Eval
@@ -204,7 +205,8 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
             if recovered:
                 notices.append({
                         'type': 'service_up',
-                        'body': 'Vuelve a comunicarse · %s' % local_time(now),
+                        'body': _('Communicating again · %(time)s') % {
+                            'time': local_time(now)},
                         })
             reply = {
                 'camera_interval': configuration.camera_heartbeat_interval,
@@ -271,8 +273,8 @@ class Configuration(ModelSingleton, ModelSQL, ModelView):
                 values['service_status'] = 'offline'
                 notices.append({
                         'type': 'service_down',
-                        'body': 'Sin latidos desde %s. Las cámaras no se '
-                        'están vigilando.' % local_time(last_seen),
+                        'body': _('No heartbeat since %(time)s. The cameras are not being monitored.') % {
+                            'time': local_time(last_seen)},
                         })
             cls.write([configuration], values)
         cls._send(notices)

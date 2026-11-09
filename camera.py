@@ -7,6 +7,7 @@ from sql import Literal
 from trytond.exceptions import UserError
 from trytond.i18n import gettext
 from trytond.model import Check, DeactivableMixin, ModelSQL, ModelView, Unique, fields
+from trytond.modules.xgettext import _
 from trytond.pool import Pool
 from trytond.pyson import Bool, Eval
 from trytond.transaction import Transaction, check_access, without_check_access
@@ -383,15 +384,17 @@ class Camera(DeactivableMixin, ModelSQL, ModelView):
                     if status == 'offline':
                         notices.append({
                                 'type': 'camera_offline', 'camera': camera.id,
-                                'body': '%s · %s · desde %s' % (
-                                    camera.name, detail or 'sin respuesta',
-                                    local_time(now)),
+                                'body': _('%(camera)s · %(detail)s · since %(time)s') % {
+                                    'camera': camera.name,
+                                    'detail': detail or _('no response'),
+                                    'time': local_time(now),
+                                    },
                                 })
                     elif camera.status == 'offline':
                         notices.append({
                                 'type': 'camera_online', 'camera': camera.id,
-                                'body': '%s · conectada de nuevo · %s' % (
-                                    camera.name, local_time(now)),
+                                'body': _('%(camera)s · connected again · %(time)s') % {
+                                    'camera': camera.name, 'time': local_time(now)},
                                 })
                 cls.write([camera], values)
         return notices

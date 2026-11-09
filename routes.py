@@ -112,6 +112,14 @@ def avisos_site(request, pool, path):
     # (a password, WebAuthn...) applies here. Without a session Voyager still needs a user
     # to show the page that says so: this system user (no password or groups).
     user_id = request.user_id or ModelData.get_id('videovigilance', 'user_web')
+    if not request.user_id and request.accept_languages:
+        with without_check_access():
+            languages = pool.get('ir.lang').search([('translatable', '=', True)])
+        language = request.accept_languages.best_match([lang.code for lang in languages])
+        if language:
+            with Transaction().set_context(language=language):
+                return Site.dispatch(SITE_TYPE, None, request, user_id,
+                    web_prefix=f'/{pool.database_name}/avisos')
     return Site.dispatch(SITE_TYPE, None, request, user_id,
         web_prefix=f'/{pool.database_name}/avisos')
 
@@ -139,9 +147,12 @@ def service_application(func):
         location = application.videovigilance_location
         if location is None or not location.active or application.user is None:
             abort(HTTPStatus.UNAUTHORIZED)
-        with Transaction().set_user(application.user.id):
-            with without_check_access():
-                return func(request, *args, location=location, **kwargs)
+        with Transaction().set_user(application.user.id), without_check_access():
+            language = application.user.language
+            if language:
+                with Transaction().set_context(language=language.code):
+                    return func(request, *args, location=location, **kwargs)
+            return func(request, *args, location=location, **kwargs)
     return wrapper
 
 

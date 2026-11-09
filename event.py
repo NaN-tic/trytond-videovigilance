@@ -5,6 +5,7 @@ import logging
 import uuid
 from datetime import datetime, timedelta
 
+from trytond.modules.xgettext import _
 from trytond.model import Check, ModelSQL, ModelView, Unique, fields
 from trytond.pool import Pool
 from trytond.pyson import Eval
@@ -22,14 +23,13 @@ PERSON = {'invisible': ~Eval('type').in_(PERSON_TYPES)}
 MOVEMENT = {'invisible': Eval('type') != 'camera_movement'}
 SNAPSHOT = {'invisible': Eval('type') == 'camera_movement'}
 
-# The title of the notice (and of the status events) of each kind.
 TITLES = {
-    'person_motion': 'Movimiento de persona',
-    'person_detection': 'Persona detectada',
-    'camera_offline': 'Cámara sin conexión',
-    'camera_online': 'Cámara recuperada',
-    'service_down': 'Servicio de detección sin señal',
-    'service_up': 'Servicio de detección recuperado',
+    'person_motion': lambda: _('Person moved'),
+    'person_detection': lambda: _('Person detected'),
+    'camera_offline': lambda: _('Camera offline'),
+    'camera_online': lambda: _('Camera recovered'),
+    'service_down': lambda: _('Detection service silent'),
+    'service_up': lambda: _('Detection service recovered'),
     }
 
 
@@ -160,10 +160,11 @@ class Event(ModelSQL, ModelView):
             if not events:
                 return
             notify_users([{
-                        'body': '%s · %s · %d persona(s)' % (
-                            event.camera.name, local_time(event.started_at),
-                            event.max_persons or 1),
-                        'event': event.id,
-                        'camera': event.camera.id,
-                        'type': event.type,
-                        } for event in events])
+                    'body': _('%(camera)s · %(time)s · People: %(count)d') % {
+                        'camera': event.camera.name,
+                        'time': local_time(event.started_at),
+                        'count': event.max_persons or 1},
+                    'event': event.id,
+                    'camera': event.camera.id,
+                    'type': event.type,
+                    } for event in events])
