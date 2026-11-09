@@ -71,19 +71,14 @@ class Location(DeactivableMixin, ModelSQL, ModelView):
     @classmethod
     def authenticate_service_token(cls, token):
         # The token is "<location id>.<secret>": the id finds the row, Fernet is not searchable.
-        if not isinstance(token, str) or not token.isascii():
-            return None
-        location_id, _, _ = token.partition('.')
+        location_id = token.partition('.')[0] if isinstance(token, str) and token.isascii() else ''
         if not location_id.isdigit():
             return None
         with without_check_access():
-            locations = cls.search([('id', '=', int(location_id)), ('active', '=', True)])
-            for location in locations:
-                if not location.service_token_encrypted:
-                    continue
-                plaintext = secret.decrypt(location.service_token_encrypted)
-                if hmac.compare_digest(plaintext, token):
-                    return location
+            location, = cls.search([('id', '=', int(location_id)), ('active', '=', True)]) or [None]
+            if location and location.service_token_encrypted and hmac.compare_digest(
+                    secret.decrypt(location.service_token_encrypted), token):
+                return location
         return None
 
     @classmethod
@@ -95,8 +90,7 @@ class Location(DeactivableMixin, ModelSQL, ModelView):
                 'invisible': (Eval('id', -1) < 0) | ~Eval('active'),
                 'depends': ['id', 'active']},
             revoke_service_token={
-                'invisible': Eval('id', -1) < 0, 'depends': ['id']})
-        cls._buttons.update(
+                'invisible': Eval('id', -1) < 0, 'depends': ['id']},
             show_service_token={
                 'invisible': Eval('id', -1) < 0, 'depends': ['id']})
 

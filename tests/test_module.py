@@ -427,9 +427,8 @@ class CameraTestCase(unittest.TestCase):
             for field in ('service_token', 'service_token_encrypted'):
                 with self.assertRaises(AccessError):
                     Location.read([location.id], [field])
-            for field in ('service_token_encrypted',):
-                with self.assertRaises(AccessError):
-                    Location.write([location], {field: 'forbidden'})
+            with self.assertRaises(AccessError):
+                Location.write([location], {'service_token_encrypted': 'forbidden'})
             with self.assertRaises(AccessButtonError):
                 Location.generate_service_token([location])
             with self.assertRaises(AccessButtonError):
@@ -437,11 +436,10 @@ class CameraTestCase(unittest.TestCase):
         with Transaction().set_user(admin), Transaction().set_context(_check_access=True):
             Location.generate_service_token([location])
             self.assertTrue(Location.read([location.id], ['service_token'])[0]['service_token'])
-            for field in ('service_token_encrypted',):
-                with self.assertRaises(AccessError):
-                    Location.read([location.id], [field])
-                with self.assertRaises(AccessError):
-                    Location.write([location], {field: 'forbidden'})
+            with self.assertRaises(AccessError):
+                Location.read([location.id], ['service_token_encrypted'])
+            with self.assertRaises(AccessError):
+                Location.write([location], {'service_token_encrypted': 'forbidden'})
             Location.revoke_service_token([location])
 
     @with_transaction()

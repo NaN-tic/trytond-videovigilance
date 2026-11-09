@@ -15,6 +15,7 @@ import hashlib
 import hmac
 import json
 import re
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from functools import wraps
 
@@ -111,16 +112,14 @@ def avisos_site(request, pool, path):
     # (a password, WebAuthn...) applies here. Without a session Voyager still needs a user
     # to show the page that says so: this system user (no password or groups).
     user_id = request.user_id or ModelData.get_id('videovigilance', 'user_web')
+    language = None
     if not request.user_id and request.accept_languages:
         with without_check_access():
             languages = pool.get('ir.lang').search([('translatable', '=', True)])
         language = request.accept_languages.best_match([lang.code for lang in languages])
-        if language:
-            with Transaction().set_context(language=language):
-                return Site.dispatch(SITE_TYPE, None, request, user_id,
-                    web_prefix=f'/{pool.database_name}/avisos')
-    return Site.dispatch(SITE_TYPE, None, request, user_id,
-        web_prefix=f'/{pool.database_name}/avisos')
+    with Transaction().set_context(language=language) if language else nullcontext():
+        return Site.dispatch(SITE_TYPE, None, request, user_id,
+            web_prefix=f'/{pool.database_name}/avisos')
 
 
 # -- API of the detection service ------------------------------------------------------
@@ -143,10 +142,9 @@ def service_application(func):
         location = Location.authenticate_service_token(token)
         if location is None:
             abort(HTTPStatus.UNAUTHORIZED)
-        with Transaction().set_user(0), without_check_access():
-            if location.service_language:
-                with Transaction().set_context(language=location.service_language.code):
-                    return func(request, *args, location=location, **kwargs)
+        language = location.service_language.code if location.service_language else None
+        with Transaction().set_user(0), without_check_access(), (
+                Transaction().set_context(language=language) if language else nullcontext()):
             return func(request, *args, location=location, **kwargs)
     return wrapper
 
@@ -181,8 +179,6 @@ def location_cameras(Camera, location, ids=None, codes=None):
 def foreign_camera_ids(Camera, location, ids):
     "Whether any supplied id does not resolve to a camera of this location."
     return len(location_cameras(Camera, location, ids=ids)) != len(set(ids))
-
-
 
 
 @service_route('/config', ['GET'], JSON_MAX_BODY)
