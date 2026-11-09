@@ -6,6 +6,8 @@
     <field name="active"/>
     <label name="address"/>
     <field name="address" colspan="3"/>
+    <label name="service_language"/>
+    <field name="service_language"/>
     <separator name="service_token" colspan="4"/>
     <group col="-1" colspan="4" id="service_credentials">
         <button name="show_service_token"/>

@@ -364,62 +364,51 @@ class CameraTestCase(unittest.TestCase):
             pool.get('videovigilance.camera').write([camera], {'location': None})
 
     @with_transaction()
-    def test_service_token_rotation_is_location_specific(self):
-        pool = Pool()
-        Location = pool.get('videovigilance.location')
-        Application = pool.get('res.user.application')
-        locations = Location.create([{'name': 'One'}, {'name': 'Two'}])
-        first, second = locations
-        creator = Transaction().user
-        Location.generate_service_token(locations)
+    def test_service_tokens_are_encrypted_and_isolated_by_location(self):
+        Location = Pool().get('videovigilance.location')
+        first, second = Location.create([{'name': 'One'}, {'name': 'Two'}])
+        Location.generate_service_token([first, second])
         first_token, second_token = [
             row['service_token'] for row in Location.read(
                 [first.id, second.id], ['service_token'])]
-        self.assertTrue(first_token)
-        self.assertTrue(second_token)
-        old_first_application = Application.check(first_token, 'videovigilance')
-        self.assertIsNotNone(old_first_application)
-        self.assertEqual(old_first_application.user.id, creator)
-        self.assertIsNotNone(Application.check(second_token, 'videovigilance'))
-        self.assertNotEqual(old_first_application.key, first_token)
+        self.assertNotEqual(first_token, second_token)
+        self.assertEqual(Location.authenticate_service_token(first_token).id, first.id)
+        self.assertEqual(Location.authenticate_service_token(second_token).id, second.id)
+        self.assertIsNone(Location.authenticate_service_token('invalid'))
+
+        table = Location.__table__()
+        cursor = Transaction().connection.cursor()
+        cursor.execute(*table.select(table.service_token_encrypted, where=table.id == first.id))
+        encrypted, = cursor.fetchone()
         self.assertEqual(
-            Fernet(self.fernet_key).decrypt(
-                old_first_application.videovigilance_key_encrypted.encode()).decode(),
-            first_token)
-        self.assertIsNone(Application.check(old_first_application.key, 'videovigilance'))
-        self.assertIsNone(Application.check(
-            old_first_application.videovigilance_key_encrypted, 'videovigilance'))
+            Fernet(self.fernet_key).decrypt(encrypted.encode()).decode(), first_token)
+        # A valid secret under another location's id does not authenticate.
+        forged = '%d.%s' % (second.id, first_token.partition('.')[2])
+        self.assertIsNone(Location.authenticate_service_token(forged))
 
         Location.generate_service_token([first])
-        rotated_first_token, = [
-            row['service_token'] for row in Location.read([first.id], ['service_token'])]
-        self.assertTrue(rotated_first_token)
-        self.assertNotEqual(rotated_first_token, first_token)
-        self.assertIsNone(Application.check(first_token, 'videovigilance'))
-        self.assertIsNotNone(Application.check(second_token, 'videovigilance'))
-        self.assertEqual(
-            Application.check(rotated_first_token, 'videovigilance').id,
-            old_first_application.id)
-        rotated_application = Application.check(rotated_first_token, 'videovigilance')
-        self.assertEqual(
-            Fernet(self.fernet_key).decrypt(
-                rotated_application.videovigilance_key_encrypted.encode()).decode(),
-            rotated_first_token)
+        rotated_token, = [row['service_token'] for row in Location.read(
+            [first.id], ['service_token'])]
+        self.assertNotEqual(rotated_token, first_token)
+        self.assertIsNone(Location.authenticate_service_token(first_token))
+        self.assertEqual(Location.authenticate_service_token(rotated_token).id, first.id)
+        self.assertEqual(Location.authenticate_service_token(second_token).id, second.id)
 
     @with_transaction()
-    def test_revoking_a_service_token_cancels_its_application(self):
-        pool = Pool()
-        Location = pool.get('videovigilance.location')
-        Application = pool.get('res.user.application')
-        location, = Location.create([{'name': 'One'}])
-        Location.generate_service_token([location])
-        token, = [row['service_token'] for row in Location.read(
-            [location.id], ['service_token'])]
-        self.assertIsNotNone(Application.check(token, 'videovigilance'))
-
-        Location.revoke_service_token([location])
-        self.assertIsNone(Location.read([location.id], ['service_token'])[0]['service_token'])
-        self.assertIsNone(Application.check(token, 'videovigilance'))
+    def test_revoked_and_inactive_location_tokens_do_not_authenticate(self):
+        Location = Pool().get('videovigilance.location')
+        active, inactive = Location.create([
+            {'name': 'Active'}, {'name': 'Inactive'}])
+        Location.generate_service_token([active, inactive])
+        active_token, inactive_token = [
+            row['service_token'] for row in Location.read(
+                [active.id, inactive.id], ['service_token'])]
+        Location.write([inactive], {'active': False})
+        self.assertEqual(Location.authenticate_service_token(active_token).id, active.id)
+        self.assertIsNone(Location.authenticate_service_token(inactive_token))
+        Location.revoke_service_token([active])
+        self.assertIsNone(Location.authenticate_service_token(active_token))
+        self.assertIsNone(Location.read([active.id], ['service_token'])[0]['service_token'])
 
     @with_transaction()
     def test_reader_cannot_read_or_manage_service_tokens_but_admin_can(self):
@@ -435,8 +424,12 @@ class CameraTestCase(unittest.TestCase):
         User.write([User(admin)], {
                 'groups': [('add', [ModelData.get_id('videovigilance', 'group_admin')])]})
         with Transaction().set_user(reader.id), Transaction().set_context(_check_access=True):
-            with self.assertRaises(AccessError):
-                Location.read([location.id], ['service_token'])
+            for field in ('service_token', 'service_token_encrypted'):
+                with self.assertRaises(AccessError):
+                    Location.read([location.id], [field])
+            for field in ('service_token_encrypted',):
+                with self.assertRaises(AccessError):
+                    Location.write([location], {field: 'forbidden'})
             with self.assertRaises(AccessButtonError):
                 Location.generate_service_token([location])
             with self.assertRaises(AccessButtonError):
@@ -444,61 +437,29 @@ class CameraTestCase(unittest.TestCase):
         with Transaction().set_user(admin), Transaction().set_context(_check_access=True):
             Location.generate_service_token([location])
             self.assertTrue(Location.read([location.id], ['service_token'])[0]['service_token'])
+            for field in ('service_token_encrypted',):
+                with self.assertRaises(AccessError):
+                    Location.read([location.id], [field])
+                with self.assertRaises(AccessError):
+                    Location.write([location], {field: 'forbidden'})
             Location.revoke_service_token([location])
 
     @with_transaction()
-    def test_only_an_admin_can_associate_a_service_application_with_a_location(self):
+    def test_other_application_keys_are_unaffected_by_location_tokens(self):
         pool = Pool()
-        Location = pool.get('videovigilance.location')
         Application = pool.get('res.user.application')
-        User = pool.get('res.user')
-        ModelData = pool.get('ir.model.data')
-        location, = Location.create([{'name': 'One'}])
-        reader, = User.create([{
-                'name': 'Reader', 'login': 'reader-application',
-                'groups': [('add', [ModelData.get_id(
-                    'videovigilance', 'group_reader')])]}])
-        rest_application, = Application.create([{
-                'user': reader.id, 'application': 'rest', 'key': 'reader-rest-key'}])
-        admin = Transaction().user
-        User.write([User(admin)], {
-                'groups': [('add', [ModelData.get_id(
-                    'videovigilance', 'group_admin')])]})
-
-        with Transaction().set_user(reader.id), Transaction().set_context(
-                _check_access=True):
-            with self.assertRaises(AccessError):
-                Application.create([{
-                        'user': reader.id, 'application': 'videovigilance',
-                        'key': 'reader-service-key',
-                        'videovigilance_location': location.id}])
-            with self.assertRaises(AccessError):
-                Application.write(
-                    [rest_application], {'videovigilance_location': location.id})
-            self.assertEqual(
-                Application.check('reader-rest-key', 'rest').id,
-                rest_application.id)
-
-        with Transaction().set_user(admin), Transaction().set_context(
-                _check_access=True):
-            Location.generate_service_token([location])
-            token = Location.read([location.id], ['service_token'])[0]['service_token']
-            service_application = Application.check(token, 'videovigilance')
-            self.assertEqual(
-                service_application.videovigilance_location.id, location.id)
-            self.assertEqual(
-                Application.check('reader-rest-key', 'rest').id,
-                rest_application.id)
-
-    @with_transaction()
-    def test_a_rest_application_cannot_be_assigned_to_a_location(self):
-        pool = Pool()
         location, = pool.get('videovigilance.location').create([{'name': 'One'}])
-        Application = pool.get('res.user.application')
         application, = Application.create([{
                 'user': Transaction().user, 'application': 'rest', 'key': 'rest-key'}])
-        with self.assertRaises(ValidationError):
-            Application.write([application], {'videovigilance_location': location.id})
+        Location = pool.get('videovigilance.location')
+        Location.generate_service_token([location])
+        self.assertEqual(application.key, 'rest-key')
+        self.assertEqual(Application.check('rest-key', 'rest').id, application.id)
+        self.assertIsNone(Application.check('rest-key', 'videovigilance'))
+        Application.write([application], {'key': 'replacement-rest-key'})
+        self.assertIsNone(Application.check('rest-key', 'rest'))
+        self.assertEqual(
+            Application.check('replacement-rest-key', 'rest').id, application.id)
 
     @with_transaction()
     def test_show_token_dialog_is_restricted_and_never_saves_its_secret(self):
@@ -530,41 +491,7 @@ class CameraTestCase(unittest.TestCase):
             self.assertNotIn(token, session.data)
             Wizard.delete(session_id)
 
-    @with_transaction()
-    def test_plaintext_service_keys_are_migrated_without_changing_device_credentials(self):
-        Application = Pool().get('res.user.application')
-        token = 'existing-device-credential'
-        application, = Application.create([{
-                    'user': Transaction().user, 'application': 'videovigilance', 'key': token}])
-        table = Application.__table__()
-        cursor = Transaction().connection.cursor()
-        # Simulate the row left by the version which stored the key in plaintext.
-        cursor.execute(*table.update(
-                [table.key, table.videovigilance_key_encrypted], [token, None],
-                where=table.id == application.id))
-        Application._encrypt_service_keys()
-        cursor.execute(*table.select(table.key, table.videovigilance_key_encrypted,
-                where=table.id == application.id))
-        fingerprint, encrypted = cursor.fetchone()
-        self.assertNotEqual(fingerprint, token)
-        self.assertEqual(Fernet(self.fernet_key).decrypt(encrypted.encode()).decode(), token)
-        self.assertEqual(Application.check(token, 'videovigilance').id, application.id)
-        Application._encrypt_service_keys()
-        cursor.execute(*table.select(table.videovigilance_key_encrypted,
-                where=table.id == application.id))
-        self.assertEqual(cursor.fetchone()[0], encrypted)
 
-    @with_transaction()
-    def test_other_application_keys_keep_their_normal_authentication(self):
-        Application = Pool().get('res.user.application')
-        application, = Application.create([{
-                    'user': Transaction().user, 'application': 'rest', 'key': 'rest-key'}])
-        self.assertEqual(application.key, 'rest-key')
-        self.assertIsNone(application.videovigilance_key_encrypted)
-        self.assertEqual(Application.check('rest-key', 'rest').id, application.id)
-        Application.write([application], {'key': 'replacement-rest-key'})
-        self.assertIsNone(Application.check('rest-key', 'rest'))
-        self.assertEqual(Application.check('replacement-rest-key', 'rest').id, application.id)
 
 
 DEVICE = {'manufacturer': 'tp-link', 'model': 'Tapo TC43', 'firmware': '1.4.1',
@@ -1129,9 +1056,7 @@ class ServiceRoutesTestCase(RouteTestCase):
     key = uuid.uuid4().hex
     second_key = uuid.uuid4().hex
     inactive_key = uuid.uuid4().hex
-    cancelled_key = uuid.uuid4().hex
-    other_application_key = uuid.uuid4().hex
-    unscoped_key = uuid.uuid4().hex
+    revoked_key = uuid.uuid4().hex
 
     @classmethod
     def setUpClass(cls):
@@ -1153,28 +1078,25 @@ class ServiceRoutesTestCase(RouteTestCase):
     @classmethod
     def setUpDatabase(cls):
         pool = Pool()
-        Application = pool.get('res.user.application')
-        # A user without any group: a scoped key is all the service has.
-        spanish, = pool.get('ir.lang').search([('code', '=', 'es')])
-        user, = pool.get('res.user').create([{
-                    'name': 'Servei', 'login': 'servei', 'language': spanish.id}])
-        cls.user = user.id
         Location = pool.get('videovigilance.location')
+        spanish, = pool.get('ir.lang').search([('code', '=', 'es')])
         (cls.location, cls.second_location, cls.inactive_location,
-            cls.cancelled_location) = Location.create([
-                {'name': 'Casa'}, {'name': 'Oficina'}, {'name': 'Magatzem', 'active': False},
+            cls.revoked_location) = Location.create([
+                {'name': 'Casa', 'service_language': spanish.id},
+                {'name': 'Oficina'}, {'name': 'Magatzem'},
                 {'name': 'Cancel·lada'}])
-        applications = [
-            (cls.key, 'videovigilance', 'validated', cls.location.id),
-            (cls.second_key, 'videovigilance', 'validated', cls.second_location.id),
-            (cls.inactive_key, 'videovigilance', 'validated', cls.inactive_location.id),
-            (cls.cancelled_key, 'videovigilance', 'cancelled', cls.cancelled_location.id),
-            (cls.other_application_key, 'rest', 'validated', None),
-            (cls.unscoped_key, 'videovigilance', 'validated', None)]
-        for key, application, state, location in applications:
-            Application(
-                key=key, user=user.id, application=application, state=state,
-                videovigilance_location=location).save()
+        Location.generate_service_token([
+            cls.location, cls.second_location, cls.inactive_location, cls.revoked_location])
+        cls.key, cls.second_key, cls.inactive_key, cls.revoked_key = [
+            row['service_token'] for row in Location.read(
+                [cls.location.id, cls.second_location.id,
+                    cls.inactive_location.id, cls.revoked_location.id],
+                ['service_token'])]
+        Location.write([cls.inactive_location], {'active': False})
+        Location.revoke_service_token([cls.revoked_location])
+        cls.other_application_key = 'unrelated-rest-key'
+        pool.get('res.user.application').create([{
+                'user': 0, 'application': 'rest', 'key': cls.other_application_key}])
         entrance, _ = pool.get('videovigilance.camera').create([
                 {'name': 'Entrada', 'code': 'CAM1', 'host': '10.0.0.5', 'rtsp_port': 554,
                     'stream_path': 'stream1', 'rotation': '0', 'location': cls.location.id,
@@ -1217,16 +1139,15 @@ class ServiceRoutesTestCase(RouteTestCase):
     def test_a_request_without_a_valid_key_is_refused(self):
         for headers in (
                 {}, {'Authorization': 'bearer no-such-key'},
-                self.headers(self.cancelled_key),
+                self.headers(self.revoked_key),
                 self.headers(self.other_application_key),
-                self.headers(self.unscoped_key),
                 self.headers(self.inactive_key),
                 {'Cookie': 'tryton_session=admin:1:a-tryton-session'}):
             with self.subTest(headers=headers):
                 response = self.client().get(self.url('config'), headers=headers)
                 self.assertEqual(response.status_code, HTTPStatus.UNAUTHORIZED)
 
-    def test_the_key_is_enough_for_a_user_without_groups(self):
+    def test_the_key_is_enough_for_the_system_user(self):
         response = self.client().get(self.url('config'), headers=self.headers())
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -1265,9 +1186,9 @@ class ServiceRoutesTestCase(RouteTestCase):
         self.assertEqual((started, ended),
             (datetime(2026, 10, 27, 10, 0, 0), datetime(2026, 10, 27, 10, 0, 5)))
         self.assertTrue(snapshot)
-        self.assertEqual(creator, self.user)
+        self.assertEqual(creator, 0)
 
-    def test_event_alarm_uses_service_user_language(self):
+    def test_event_alarm_uses_location_service_language(self):
         self.assertEqual(self.put_event('language').status_code, HTTPStatus.CREATED)
         with Transaction().start(self.db_name, 0):
             Alarm = Pool().get('videovigilance.alarm')

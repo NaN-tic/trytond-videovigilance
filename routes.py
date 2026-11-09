@@ -34,7 +34,6 @@ from .assets import STATIC, VERSION
 from .camera import MAX_HEARTBEAT_FRAME, is_frame
 from .event import PERSON_TYPES
 from .push import snapshot_token
-from .res import SERVICE_APPLICATION
 from .voyager import SITE_TYPE
 
 PREFIX = '/<database_name>/avisos'
@@ -127,7 +126,7 @@ def avisos_site(request, pool, path):
 # -- API of the detection service ------------------------------------------------------
 
 def service_application(func):
-    """Authenticate a service key and return its explicitly associated location."""
+    """Authenticate a service key and run independently of any application user."""
     @wraps(func)
     def wrapper(request, *args, **kwargs):
         authorization = request.authorization or parse_authorization_header(
@@ -140,17 +139,13 @@ def service_application(func):
             token = authorization.get('password')
         else:
             abort(HTTPStatus.UNAUTHORIZED)
-        Application = Pool().get('res.user.application')
-        application = Application.check(token, SERVICE_APPLICATION)
-        if not application:
+        Location = Pool().get('videovigilance.location')
+        location = Location.authenticate_service_token(token)
+        if location is None:
             abort(HTTPStatus.UNAUTHORIZED)
-        location = application.videovigilance_location
-        if location is None or not location.active or application.user is None:
-            abort(HTTPStatus.UNAUTHORIZED)
-        with Transaction().set_user(application.user.id), without_check_access():
-            language = application.user.language
-            if language:
-                with Transaction().set_context(language=language.code):
+        with Transaction().set_user(0), without_check_access():
+            if location.service_language:
+                with Transaction().set_context(language=location.service_language.code):
                     return func(request, *args, location=location, **kwargs)
             return func(request, *args, location=location, **kwargs)
     return wrapper

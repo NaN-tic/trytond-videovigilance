@@ -25,17 +25,17 @@ credential immediately; generate a new one to reconnect.
 Neither operation changes other locations' credentials. Deactivating a location also blocks
 its credential while it remains inactive.
 
-The token uses Tryton's existing `res.user.application` model with application
-**Video Surveillance: Detection Service**, linked to the location. The user who first
-generates it owns the application and appears as the creator of events; the service does
-not log in as that user. Only surveillance administration users can read the token, use
-the generation/revocation buttons, or assign an application to a location. Applications
-of other types cannot be assigned to a location.
+The credential belongs to the location; it is not a Tryton user's application key. Service
+requests run as the system user, so the person who generated the token is neither logged in
+nor recorded as the creator of detection events. Only surveillance administrators can show,
+generate or revoke the credential. Set the location's **Service Language** when notifications
+from its service should use a language other than the configured default.
 
 The location form does not display the token by default. An administrator can use **Show
-Service Token** to open a copyable read-only dialog. The dialog returns the original
-credential, decrypted from Fernet storage, not the ciphertext or its fingerprint; it is
-not stored in the wizard session. Close the dialog after copying it.
+Service Token** to open a copyable read-only dialog. The dialog decrypts the Fernet ciphertext;
+the ciphertext is not exposed through RPC.
+The token is not stored in the wizard session.
+
 
 Every request carries the key:
 
@@ -43,26 +43,22 @@ Every request carries the key:
 Authorization: Bearer LOCATION_SERVICE_TOKEN
 ```
 
-* The key identifies the location, not just a user. Two keys owned by the same user remain
-  isolated. A key without an associated location is refused (401), with no global fallback.
-* All routes enforce this boundary: camera configuration and passwords, events, heartbeats,
-  latest pictures, live frames and pending movement commands. A request naming a camera
-  from another location returns 404. Mixed-location heartbeat/poll requests are rejected
-  before any camera or mailbox is updated.
-* The groups and access rules of the application's user do not take part in service requests.
-* Cancelling the application also revokes its key at once.
+* The key identifies exactly one active location. All routes enforce this boundary: camera
+  configuration and passwords, events, heartbeats, latest pictures, live frames and pending
+  movement commands. A request naming a camera from another location returns 404.
+  Mixed-location heartbeat/poll requests are rejected before any camera or mailbox is updated.
 * Service tokens are encrypted at rest with `cryptography.fernet`, through `secret.py`, using
   `[videovigilance] secret_key` in `trytond.conf` (the same key as camera passwords). Keep the
   key in protected backups separately from the database; replacing it prevents recovery of
   existing credentials.
-* `res.user.application.key` stores a SHA-256 fingerprint for service-key lookup, not the
-  usable token. `videovigilance_key_encrypted` stores its Fernet ciphertext and is not readable
-  or writable through normal RPC access. The location form decrypts it for authorized
-  administrators. Other applications retain their existing key handling.
-* `TRYTON_API_TOKEN` remains the original token, not its fingerprint or ciphertext. Use HTTPS
+* The location stores only the Fernet-encrypted token, formatted `<location id>.<secret>`; the
+  id selects the location and the secret is compared after decryption. The field is
+  protected from normal RPC reads and writes. Other `res.user.application` keys are
+  unchanged.
+* `TRYTON_API_TOKEN` remains the original token, not its ciphertext. Use HTTPS
   when the service does not reach Tryton through a private link.
-* Nothing is served for a key of another application, a cancelled key or no key (401), nor to a
-  Tryton session cookie.
+* Missing, invalid, revoked or inactive-location credentials receive 401; Tryton session
+  cookies do not authenticate service requests.
 
 ## Routes
 
@@ -90,31 +86,14 @@ The service's global health status/watchdog and heartbeat intervals remain share
 Configuration; this change isolates credentials and camera access, not service-health
 monitoring per Raspberry.
 
-## Upgrading existing location credentials to encrypted storage
+## Upgrading
 
-Ensure `[videovigilance] secret_key` is configured before updating the module. The module
-update encrypts existing detection-service keys and replaces their plaintext database
-values with fingerprints in the same transaction. Existing location credentials remain
-valid: no token change or Raspberry reconfiguration is needed. The migration is idempotent;
-it does not encrypt already migrated values again. Protect or retire older database backups,
-which may still contain plaintext tokens.
+Update the `videovigilance` module (`trytond-admin -u videovigilance`, using your instance's
+configuration/database), then restart Tryton. This cutover does not migrate previous
+`res.user.application` service keys. After the update, generate a token for each location,
+replace `TRYTON_API_TOKEN` in its Raspberry Pi `.env`, and restart that service. Its old
+credential will no longer authenticate.
 
-
-## Upgrading from a shared service key
-
-Update the `videovigilance` module in the database (`trytond-admin -u videovigilance`, using
-your instance's configuration/database), then restart Tryton. No Tryton core change or new
-service environment variable is required.
-
-Generate a credential from each location and replace `TRYTON_API_TOKEN` on its Raspberry,
-then restart that service. Existing application keys without a location are no longer
-accepted: they return 401 until replaced by a location credential. There is no automatic
-assignment of an old shared key to a location.
-
-
-## Upgrading from the JSON-RPC
-
-The service used to log in over JSON-RPC and to use the relay routes under `/avisos/relay`. Both
-are gone, with the `Videovigilància: servei` group. Update the module, create the key, clear the
-password of the service user (it no longer logs in) and then deploy the service with the new
-`.env` (`TRYTON_API_TOKEN`); until then the service cannot talk to Tryton.
+The detection service does not log in through JSON-RPC or use a service user. Its API requests
+use the location Bearer token and execute as the system user. Remove any obsolete
+detection-service Tryton user only after confirming it is not used elsewhere.

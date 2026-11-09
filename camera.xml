@@ -227,22 +227,9 @@
             <field name="perm_read" eval="True"/>
             <field name="perm_write" eval="False"/>
         </record>
-        <record model="ir.model.field.access" id="access_application_location_default">
-            <field name="model">res.user.application</field>
-            <field name="field">videovigilance_location</field>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="False"/>
-        </record>
-        <record model="ir.model.field.access" id="access_application_location_admin">
-            <field name="model">res.user.application</field>
-            <field name="field">videovigilance_location</field>
-            <field name="group" ref="group_admin"/>
-            <field name="perm_read" eval="True"/>
-            <field name="perm_write" eval="True"/>
-        </record>
-        <record model="ir.model.field.access" id="access_service_token_encrypted">
-            <field name="model">res.user.application</field>
-            <field name="field">videovigilance_key_encrypted</field>
+        <record model="ir.model.field.access" id="access_location_service_token_encrypted">
+            <field name="model">videovigilance.location</field>
+            <field name="field">service_token_encrypted</field>
             <field name="perm_read" eval="False"/>
             <field name="perm_write" eval="False"/>
         </record>
