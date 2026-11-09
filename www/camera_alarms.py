@@ -6,6 +6,7 @@ from dominate.tags import a, div, h2, img, li, small, span, strong, ul
 from trytond.model import fields
 from trytond.pool import Pool
 from trytond.transaction import without_check_access
+from trytond.modules.xgettext import _
 
 from ..push import local_time
 from ..voyager import (
@@ -58,14 +59,15 @@ class CameraAlarmsPage(Endpoint):
             cameras = Camera.search([('id', '=', self.camera_id)])
             camera = cameras[0] if cameras else None
         if camera is None:
-            return page(div('La cámara no existe.', cls='py-16 text-center text-gray-400'),
-                status=404, title='Cámara')
+            return page(div(_('Camera not found.'),
+                cls='py-16 text-center text-gray-400'),
+                status=404, title=_('Camera'))
         # Voyager only fills fields from the route; the query string is read here.
         requested = max(1, voyager().request.args.get('page', 1, type=int))
-        _, total = _alarms(camera, 1)
+        first_rows, total = _alarms(camera, 1)
         last = max(1, -(-total // PAGE_SIZE))
         number = min(requested, last)  # a page past the end shows the last one
-        rows, _ = _alarms(camera, number)
+        rows, page_total = _alarms(camera, number)
         here = url('camera_alarms', camera_id=camera.id)
 
         with div(id='camera-alarms') as root:
@@ -75,21 +77,26 @@ class CameraAlarmsPage(Endpoint):
                 h2('%s · %s' % (camera.name, camera.location.name if camera.location else '-'),
                     cls='mb-2 text-sm font-semibold text-gray-400')
                 if total:
-                    small('%d en total · página %d de %d' % (total, number, last),
+                    small(_('%(total)d total · page %(page)d of %(pages)d') % {
+                        'total': total, 'page': number, 'pages': last},
                         cls='mb-2 block text-gray-400')
                 with ul(cls='divide-y divide-white/10'):
                     if not rows:
-                        li('Esta cámara todavía no tiene avisos.', cls='py-3 text-gray-400')
+                        li(_('This camera has no notices yet.'),
+                            cls='py-3 text-gray-400')
                     for alarm, has_picture in rows:
                         _alarm(alarm, has_picture)
                 with div(cls='mt-3 flex justify-between text-sm'):
                     if number > 1:
-                        a('← Más recientes', cls=LINK, href='%s?page=%d' % (here, number - 1))
+                        a(_('← Newer'), cls=LINK,
+                            href='%s?page=%d' % (here, number - 1))
                     else:
                         span()
                     if number < last:
-                        a('Más antiguos →', cls=LINK, href='%s?page=%d' % (here, number + 1))
-        return page(root, title='Avisos de la cámara')
+                        a(_('Older →'), cls=LINK,
+                            href='%s?page=%d' % (here, number + 1))
+        return page(root,
+            title=_('Camera notices'))
 
 
 class AlarmSnapshot(Endpoint):
