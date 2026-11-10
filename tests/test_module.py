@@ -419,9 +419,9 @@ class CameraTestCase(unittest.TestCase):
         reader, = User.create([{
             'name': 'Reader', 'login': 'reader',
             'groups': [('add', [ModelData.get_id('videovigilance', 'group_reader')])]}])
-        admin = Transaction().user
-        User.write([User(admin)], {
-                'groups': [('add', [ModelData.get_id('videovigilance', 'group_admin')])]})
+        admin, = User.create([{
+            'name': 'Video Admin', 'login': 'video-admin',
+            'groups': [('add', [ModelData.get_id('videovigilance', 'group_admin')])]}])
         with Transaction().set_user(reader.id), Transaction().set_context(_check_access=True):
             for field in ('service_token', 'service_token_encrypted'):
                 with self.assertRaises(AccessError):
@@ -432,7 +432,7 @@ class CameraTestCase(unittest.TestCase):
                 Location.generate_service_token([location])
             with self.assertRaises(AccessButtonError):
                 Location.revoke_service_token([location])
-        with Transaction().set_user(admin), Transaction().set_context(_check_access=True):
+        with Transaction().set_user(admin.id), Transaction().set_context(_check_access=True):
             Location.generate_service_token([location])
             self.assertTrue(Location.read([location.id], ['service_token'])[0]['service_token'])
             with self.assertRaises(AccessError):
