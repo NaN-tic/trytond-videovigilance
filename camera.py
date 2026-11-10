@@ -436,6 +436,11 @@ class ShowServiceToken(Wizard):
             Button("Close", 'end', 'tryton-close', default=True),
             ])
 
+    @classmethod
+    def create(cls):
+        cls.check_access()
+        return super().create()
+
     def default_start(self, fields):
         Location = Pool().get('videovigilance.location')
         location_id = Transaction().context.get('active_id')
