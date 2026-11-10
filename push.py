@@ -8,7 +8,6 @@ from datetime import timezone
 from zoneinfo import ZoneInfo
 
 from trytond.config import config
-from trytond.modules.xgettext import _
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
 from trytond.transaction import without_check_access
