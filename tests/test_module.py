@@ -245,7 +245,6 @@ class CallTestCase(unittest.TestCase):
 
     @with_transaction()
     def test_a_number_that_cannot_be_dialled_is_refused_when_saved(self):
-        from trytond.model.exceptions import ValidationError
         with self.assertRaises(ValidationError):
             self.scenario(('ext. 12',))
 

@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from functools import wraps
 
 from trytond.config import config
-from trytond.model.exceptions import SQLConstraintError
+from trytond.model.exceptions import SQLConstraintError, ValidationError
 from trytond.pool import Pool
 from trytond.protocols.wrappers import (
     HTTPStatus, Response, abort, allow_null_origin, parse_authorization_header,
@@ -212,6 +212,8 @@ def service_event(request, pool, uid, location):
         # Another request is storing this very uid at this moment; the service sends the
         # event again and then finds it stored.
         abort(HTTPStatus.CONFLICT)
+    except ValidationError as problem:
+        abort(HTTPStatus.BAD_REQUEST, str(problem))  # raising rolls the transaction back
     if not created:
         Camera.lock([event.camera] if event.camera else [])
         if event.camera is None or event.camera.location.id != location.id:
