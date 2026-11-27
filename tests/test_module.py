@@ -1478,15 +1478,15 @@ class SessionTestCase(unittest.TestCase):
             self.assertEqual(display_name(account), 'cuenta@gmail.com')
 
     @with_transaction()
-    def test_a_web_account_that_lost_its_password_or_was_deactivated_is_out(self):
+    def test_web_session_requires_an_active_account(self):
         WebUser = Pool().get('web.user')
         account = self.account()
         with self.serving(account=account, session_id='one'):
             self.assertEqual(current_user(), account)
         WebUser.write([account], {'password': None})
         with self.serving(account=account, session_id='two'):
-            self.assertIsNone(current_user())
-        WebUser.write([account], {'password': PASSWORD, 'active': False})
+            self.assertEqual(current_user(), account)
+        WebUser.write([account], {'active': False})
         with self.serving(account=account, session_id='three'):
             self.assertIsNone(current_user())
 
@@ -1565,7 +1565,7 @@ class SessionTestCase(unittest.TestCase):
             Pool().get('web.user.authenticate.attempt').count('avisos@gmail.com'), 3)
 
     @with_transaction()
-    def test_notices_reach_the_tryton_users_with_access_and_the_web_accounts_that_can_log_in(self):
+    def test_notices_reach_the_tryton_users_with_access_and_active_web_accounts(self):
         pool = Pool()
         company = create_company()
         with set_company(company):
@@ -1582,6 +1582,8 @@ class SessionTestCase(unittest.TestCase):
         self.assertTrue(application.eligible_user(linked))
         self.assertFalse(application.eligible_user(outsider_account))
         self.assertTrue(application.eligible_user(own))
+        self.assertTrue(application.eligible_user(no_password))
+        pool.get('web.user').write([no_password], {'active': False})
         self.assertFalse(application.eligible_user(no_password))
 
     @with_transaction()
