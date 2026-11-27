@@ -33,7 +33,7 @@ from trytond.transaction import Transaction, without_check_access
 from trytond.wizard import StateAction, Wizard
 
 from .assets import VERSION
-from .push import APPLICATION, has_access, is_admin, web_user_for
+from .push import APPLICATION, can_login_web_account, has_access, is_admin, web_user_for
 
 SITE_TYPE = 'videovigilance_alarm'
 
@@ -187,10 +187,9 @@ def tryton_user():
 def web_account():
     "The web account (web.user) logged in with a password in this browser, or None."
     account = session().user
-    if account is None:
-        return None
-    with without_check_access():
-        return account if account.active and account.password_hash else None
+    if account is not None and can_login_web_account(account):
+        return account
+    return None
 
 
 def access_problem(user):

@@ -7,10 +7,11 @@ import json
 from datetime import timezone
 from zoneinfo import ZoneInfo
 
+from sql import Null
 from trytond.config import config
 from trytond.model import fields
 from trytond.pool import Pool, PoolMeta
-from trytond.transaction import without_check_access
+from trytond.transaction import Transaction, without_check_access
 
 APPLICATION = 'videovigilance'
 
@@ -39,6 +40,16 @@ def _group_ids(*names):
 def is_web_account(user):
     "Whether `user` is a web.user (a web account that logs in with a password), not a Tryton user."
     return user.__name__ == 'web.user'
+
+
+def can_login_web_account(account):
+    # web.user masks password_hash in ORM reads. Check presence only.
+    table = Pool().get('web.user').__table__()
+    cursor = Transaction().connection.cursor()
+    cursor.execute(*table.select(table.id, where=(table.id == account.id)
+            & table.active & (table.password_hash != Null)
+            & (table.password_hash != '')))
+    return cursor.fetchone() is not None
 
 
 def has_access(user):
@@ -153,10 +164,9 @@ class Application(metaclass=PoolMeta):
         # its own (not linked to a Tryton user) while it can still log in with a password.
         with without_check_access():
             owners = Pool().get('res.user').search([('web_user', '=', user.id)])
-            has_password = bool(user.password_hash)
         if owners:
             return bool(eligible and any(has_access(owner) for owner in owners))
-        return bool(eligible and has_password)
+        return bool(eligible and can_login_web_account(user))
 
 
 class Message(metaclass=PoolMeta):
